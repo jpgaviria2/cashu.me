@@ -15,7 +15,7 @@
         <img
           src="~assets/trails-logo.png"
           alt="Trails Coffee"
-          style="height: 60px; max-width: 300px; object-fit: contain"
+          style="height: 100px; max-width: 400px; object-fit: contain"
         />
       </q-toolbar-title>
       <transition
@@ -111,69 +111,25 @@
           }}</q-item-label>
         </q-item-section>
       </q-item>
-      <q-item-label header>{{
-        $t("MainHeader.menu.links.title")
-      }}</q-item-label>
-      <EssentialLink
-        v-for="link in essentialLinks"
-        :key="link.title"
-        v-bind="link"
-      />
     </q-list>
   </q-drawer>
 </template>
 
 <script lang="ts">
 import { defineComponent, ref } from "vue";
-import EssentialLink from "components/EssentialLink.vue";
 import { useUiStore } from "src/stores/ui";
 import { useI18n } from "vue-i18n";
 
 export default defineComponent({
   name: "MainHeader",
   mixins: [windowMixin],
-  components: {
-    EssentialLink,
-  },
+  components: {},
   setup() {
     const leftDrawerOpen = ref(false);
     const uiStore = useUiStore();
     const { t } = useI18n();
     const countdown = ref(0);
     let countdownInterval;
-
-    const essentialLinks = [
-      {
-        title: t("MainHeader.menu.links.cashuSpace.title"),
-        caption: t("MainHeader.menu.links.cashuSpace.caption"),
-        icon: "web",
-        link: "https://cashu.space",
-      },
-      {
-        title: t("MainHeader.menu.links.github.title"),
-        caption: t("MainHeader.menu.links.github.caption"),
-        icon: "code",
-        link: "https://github.com/cashubtc/cashu.me",
-      },
-      {
-        title: t("MainHeader.menu.links.telegram.title"),
-        caption: t("MainHeader.menu.links.telegram.caption"),
-        icon: "chat",
-        link: "https://t.me/CashuMe",
-      },
-      {
-        title: t("MainHeader.menu.links.twitter.title"),
-        caption: t("MainHeader.menu.links.twitter.caption"),
-        icon: "rss_feed",
-        link: "https://twitter.com/CashuBTC",
-      },
-      {
-        title: t("MainHeader.menu.links.donate.title"),
-        caption: t("MainHeader.menu.links.donate.caption"),
-        icon: "favorite",
-        link: "https://docs.cashu.space/contribute",
-      },
-    ];
 
     const toggleLeftDrawer = () => {
       leftDrawerOpen.value = !leftDrawerOpen.value;
@@ -204,7 +160,6 @@ export default defineComponent({
     };
 
     return {
-      essentialLinks,
       leftDrawerOpen,
       toggleLeftDrawer,
       isStaging,
@@ -224,8 +179,8 @@ export default defineComponent({
 
 .q-toolbar {
   flex-wrap: nowrap;
-  min-height: 80px; /* Increased height for larger logo */
-  padding: 10px 0;
+  min-height: 120px; /* Much larger height for bigger logo */
+  padding: 15px 0;
 }
 
 .q-toolbar-title {
