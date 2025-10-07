@@ -4,10 +4,10 @@
     <div class="text-center">
       <transition appear enter-active-class="animated bounce">
         <img
-          src="/clean.png"
-          alt="Clean Icon"
+          src="~assets/trails-logo.png"
+          alt="Trails Coffee"
           class="q-my-lg"
-          style="width: 80px; height: 80px"
+          style="max-width: 250px; height: auto"
         />
       </transition>
       <h2 class="q-mt-md">{{ $t("WelcomeSlide1.title") }}</h2>

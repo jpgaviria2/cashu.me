@@ -113,6 +113,7 @@ export default {
   align-items: center;
   justify-content: center;
   margin-bottom: 1rem;
+  color: #4a4a4a; /* Dark gray for readability */
 }
 .instruction span {
   margin-left: 0.5rem;
@@ -120,16 +121,26 @@ export default {
 }
 h2 {
   font-weight: bold;
+  color: #6b4423; /* Trails Coffee brown */
+}
+h3 {
+  color: #6b4423; /* Trails Coffee brown */
 }
 h6 {
   font-weight: bold;
   margin-top: 1rem;
   margin-bottom: 0.5rem;
+  color: #6b4423; /* Trails Coffee brown */
 }
 p {
   font-size: large;
+  color: #4a4a4a; /* Dark gray for readability */
 }
 .sub-instruction {
   margin-left: 0.5rem;
+  color: #4a4a4a; /* Dark gray for readability */
+}
+strong {
+  color: #2c2c2c; /* Darker for emphasis */
 }
 </style>

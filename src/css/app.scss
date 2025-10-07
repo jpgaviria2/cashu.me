@@ -9,7 +9,6 @@ body {
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue",
     sans-serif;
-  background: #fffef7 !important; // Trails Coffee warm white
 }
 
 h1,
@@ -46,14 +45,8 @@ body,
 .q-card {
   border-top-left-radius: 20px;
   border-top-right-radius: 20px;
-}
-
-.q-dialog__inner--minimized > div {
-  border-top-left-radius: 20px;
-  border-top-right-radius: 20px;
   border-bottom-right-radius: 20px;
   border-bottom-left-radius: 20px;
-  max-width: 650px;
 }
 
 .custom-btn {
@@ -72,27 +65,15 @@ body,
 }
 
 .custom-btn-text {
-  font-size: 18px !important;
-  color: white;
-  padding-top: 2px;
+  font-size: 18px;
+  font-weight: 600;
 }
 
-.full-width-card {
-  width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-.animated.tada {
-  animation-duration: 1s;
-}
-.animated.bounceIn {
-  animation-duration: 1s;
-}
-.animated.bounce {
-  animation-duration: 1s;
-}
-
-.q-checkbox__svg {
-  color: var(--q-dark);
+.icon-background {
+  background: rgba(107, 68, 35, 0.1);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

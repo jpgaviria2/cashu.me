@@ -37,6 +37,10 @@ export default {
   height: 100%;
 }
 
+.trails-terms-bg {
+  background-color: #fffef7 !important; /* Trails Coffee warm beige */
+}
+
 .q-carousel {
   flex: 1;
 }

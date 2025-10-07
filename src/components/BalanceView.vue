@@ -105,29 +105,6 @@
         </q-badge>
       </div>
     </div>
-    <!-- mint url -->
-    <div class="row q-mt-md q-mb-none text-secondary" v-if="activeMintUrl">
-      <div class="col-12 cursor-pointer">
-        <span class="text-weight-light" @click="setTab('mints')">
-          {{ $t("BalanceView.mintUrl.label") }}: <b>{{ activeMintLabel }}</b>
-        </span>
-      </div>
-    </div>
-    <!-- mint balance -->
-    <div class="row q-mb-none text-secondary" v-if="mints.length > 1">
-      <div class="col-12">
-        <span class="q-my-none q-py-none text-weight-regular">
-          {{ $t("BalanceView.mintBalance.label") }}:
-          <b>
-            <AnimatedNumber
-              :value="getActiveBalance"
-              :format="(val) => formatCurrency(val, activeUnit)"
-              class="q-my-none q-py-none cursor-pointer"
-            />
-          </b>
-        </span>
-      </div>
-    </div>
   </div>
   <!-- pending -->
   <div class="row q-mt-xs q-mb-none" v-if="pendingBalance > 0">

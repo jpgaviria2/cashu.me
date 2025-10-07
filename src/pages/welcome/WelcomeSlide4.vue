@@ -22,70 +22,70 @@
               IMPORTANT NOTICE: THESE TERMS OF SERVICE INCLUDE A MEDIATION-FIRST
               CLAUSE REQUIRING MEDIATION BEFORE ARBITRATION OR LITIGATION.
               PLEASE READ THESE TERMS CAREFULLY. IF YOU DO NOT AGREE, DO NOT USE
-              CASHU.ME.
+              TRAILS COFFEE REWARDS.
             </strong>
           </p>
           <p>
             <strong>
               ALL REFERENCES TO LAW, REGULATION, AND JURISDICTION IN THESE TERMS
-              REFER TO THE LAWS AND REGULATIONS OF THE USER’S JURISDICTION.
+              REFER TO THE LAWS AND REGULATIONS OF THE USER'S JURISDICTION.
               USERS ARE RESPONSIBLE FOR DETERMINING THE LEGALITY AND REGULATORY
               COMPLIANCE OF THEIR ACTIVITIES.
             </strong>
           </p>
           <p>
             <strong
-              >CASHU.ME DOES NOT HOLD ECASH, DOES NOT EXECUTE AND CANNOT MONITOR
-              TRANSACTIONS, AND DOES NOT OPERATE OR VERIFY ANY MINTS.</strong
+              >TRAILS COFFEE REWARDS DOES NOT HOLD ECASH, DOES NOT EXECUTE AND
+              CANNOT MONITOR TRANSACTIONS, AND DOES NOT OPERATE OR VERIFY ANY
+              MINTS.</strong
             >
           </p>
           <p>
-            These Terms of Service (these “Terms”) constitute the entire
-            agreement and understanding between you (“you” or “your”) and
-            Cashu.me (“Cashu.me,” “we,” “us,” or “our”) regarding your use of
-            the Cashu.me website and any related applications, software, code,
-            or services (collectively, the “Site” or “Services”). By accessing
-            or using the Site or Services, you acknowledge that you have read,
-            understand, and agree to be bound by these Terms. If you do not
-            agree, do not access or use the Site or Services.
+            These Terms of Service (these "Terms") constitute the entire
+            agreement and understanding between you ("you" or "your") and Trails
+            Coffee ("Trails Coffee," "we," "us," or "our") regarding your use of
+            the Trails Coffee Rewards app and any related applications,
+            software, code, or services (collectively, the "App" or "Services").
+            By accessing or using the App or Services, you acknowledge that you
+            have read, understand, and agree to be bound by these Terms. If you
+            do not agree, do not access or use the App or Services.
           </p>
           <p><strong>1. Nature of the Services</strong></p>
           <p>
-            1.1 <strong>Non-Custodial Web Application:</strong> Cashu.me
-            provides a non-custodial web application (“wallet”) that is executed
-            entirely on your device. Our Site merely makes available client-side
-            code implementing the open-source Cashu protocol. We do not run a
-            server that holds your ecash or executes transactions on your
-            behalf.
+            1.1 <strong>Non-Custodial Web Application:</strong> Trails Coffee
+            provides a non-custodial web application ("rewards app") that is
+            executed entirely on your device. Our App merely makes available
+            client-side code implementing the open-source ecash protocol. We do
+            not run a server that holds your rewards or executes transactions on
+            your behalf.
           </p>
           <p>
-            1.2 <strong>No Control Over Mints:</strong> Cashu.me does not issue
-            ecash and does not operate or control any Mint. The choice of any
-            Mint and any transaction or relationship you establish with that
-            Mint is solely between you and that Mint. Cashu.me has no
+            1.2 <strong>No Control Over Mints:</strong> Trails Coffee does not
+            issue ecash and does not operate or control any Mint. The choice of
+            any Mint and any transaction or relationship you establish with that
+            Mint is solely between you and that Mint. Trails Coffee has no
             involvement, responsibility, or liability in any such interaction.
           </p>
           <p>
-            1.3 <strong>No Funds Access:</strong> At no time does Cashu.me have
-            custody, possession, or control of your ecash. Transactions occur
-            solely by your actions and through your chosen Mint. We do not
+            1.3 <strong>No Funds Access:</strong> At no time does Trails Coffee
+            have custody, possession, or control of your rewards. Transactions
+            occur solely by your actions and through your chosen Mint. We do not
             monitor, verify, or facilitate transfers between you and any Mint or
             other parties.
           </p>
           <p>
-            1.4 <strong>Web Server Only:</strong> Cashu.me does not operate any
-            servers except for the web server that delivers the application to
-            your device. The application is executed entirely on your device.
-            Once the code is served, all logic executes locally and Cashu.me has
-            no control over the application.
+            1.4 <strong>Web Server Only:</strong> Trails Coffee does not operate
+            any backend services for the ecash protocol. We only provide the
+            client-side application code.
           </p>
           <p>
-            1.5 <strong>Open Source Code:</strong> The application code is open
-            source, meaning it can be self-hosted and run by third parties using
-            different domains. Cashu.me has no control over, and does not
-            endorse or assume responsibility for, any instances of the code
-            running outside of the Cashu.me service. Your use of any such
-            third-party instances is at your own risk.
+            1.5 <strong>Open Source Code:</strong> The application code is based
+            on open source software, meaning it can be self-hosted and run by
+            third parties using different domains. Trails Coffee has no control
+            over, and does not endorse or assume responsibility for, any
+            instances of the code running outside of the Trails Coffee Rewards
+            service. Your use of any such third-party instances is at your own
+            risk.
           </p>
           <p>
             1.6 <strong>Code Disclaimer:</strong> The open-source code is
@@ -95,24 +95,24 @@
           </p>
           <p><strong>2. User Responsibilities & Disclaimers</strong></p>
           <p>
-            2.1 <strong>User’s Sole Responsibility:</strong> You understand and
-            agree that you use the Site and Services at your own risk and for
+            2.1 <strong>User's Sole Responsibility:</strong> You understand and
+            agree that you use the App and Services at your own risk and for
             your own account. You alone are fully responsible for selecting
-            Mints, conducting transactions, and safeguarding your ecash and
-            secret values. Cashu.me is not a party to and disclaims any
+            Mints, conducting transactions, and safeguarding your rewards and
+            secret values. Trails Coffee is not a party to and disclaims any
             responsibility for any agreements, terms, or disputes between you
             and any Mint.
           </p>
           <p>
-            2.2 <strong>No Partnership with Mints:</strong> Cashu.me is not
+            2.2 <strong>No Partnership with Mints:</strong> Trails Coffee is not
             affiliated with, endorsed by, or responsible for any Mint. We make
-            no representations, warranties, or guarantees about any Mint’s
+            no representations, warranties, or guarantees about any Mint's
             integrity, legality, liquidity, or functionality. Your relationship
             with any Mint, including the issuance, redemption, or valuation of
-            ecash, is solely a matter between you and that Mint. Cashu.me is not
-            a party to any transaction between you and any Mint or third party.
-            No agency, partnership, or joint venture relationship is formed by
-            your use of the Site.
+            ecash, is solely a matter between you and that Mint. Trails Coffee
+            is not a party to any transaction between you and any Mint or third
+            party. No agency, partnership, or joint venture relationship is
+            formed by your use of the App.
           </p>
           <p>
             2.3 <strong>Risk of Ecash:</strong> Ecash is an experimental,
@@ -125,13 +125,13 @@
           <p>
             We may amend or update these Terms at any time without notice. You
             are advised to review these Terms periodically. Your continued use
-            of the Site or Services after any modifications constitutes
+            of the App or Services after any modifications constitutes
             acceptance of the updated Terms. If you do not agree, discontinue
             your use.
           </p>
           <p><strong>4. Compliance with Laws</strong></p>
           <p>
-            4.1 <strong>Legal Compliance:</strong> Your use of the Site and any
+            4.1 <strong>Legal Compliance:</strong> Your use of the App and any
             Services is void where prohibited by law. You must determine whether
             your use of ecash and related activities are lawful. You are solely
             responsible for compliance with all applicable laws, taxes, and
@@ -145,18 +145,18 @@
             license, registration, or compliance with financial regulations in
             your jurisdiction.
           </p>
-          <p><strong>5. License to Use the Site</strong></p>
+          <p><strong>5. License to Use the App</strong></p>
           <p>
             Subject to your compliance with these Terms, we grant you a limited,
             personal, non-exclusive, non-transferable, revocable license to use
-            the Site. We may suspend or terminate your access at our sole
+            the App. We may suspend or terminate your access at our sole
             discretion.
           </p>
           <p><strong>6. Risks and Limitation of Liability</strong></p>
           <p>
             6.1 <strong>No Liability for Interactions with Mints:</strong>
-            Cashu.me is not liable for any transactions, disputes, or issues
-            arising from your dealings with Mints.
+            Trails Coffee is not liable for any transactions, disputes, or
+            issues arising from your dealings with Mints.
           </p>
           <p>
             6.2 <strong>Assumption of Risk:</strong> You acknowledge
@@ -164,39 +164,39 @@
             volatility, theft, and regulatory uncertainty.
           </p>
           <p>
-            6.3 <strong>Waiver of Accountability:</strong> By using the Site,
-            you waive any right to hold Cashu.me accountable for any damages,
-            losses, or disputes arising from your use of the Site or Services.
+            6.3 <strong>Waiver of Accountability:</strong> By using the App, you
+            waive any right to hold Trails Coffee accountable for any damages,
+            losses, or disputes arising from your use of the App or Services.
           </p>
           <p>
-            6.4 <strong>No Warranties:</strong> THE SITE AND SERVICES ARE
-            PROVIDED “AS IS” WITHOUT ANY WARRANTIES. WE DISCLAIM ALL WARRANTIES
+            6.4 <strong>No Warranties:</strong> THE APP AND SERVICES ARE
+            PROVIDED "AS IS" WITHOUT ANY WARRANTIES. WE DISCLAIM ALL WARRANTIES
             TO THE MAXIMUM EXTENT PERMITTED BY LAW.
           </p>
           <p>
             6.5 <strong>Limitation of Liability:</strong> TO THE FULLEST EXTENT
-            PERMITTED BY LAW, CASHU.ME IS NOT LIABLE FOR INDIRECT, INCIDENTAL,
-            SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING OUT OF OR
-            RELATED TO THESE TERMS, THE SITE, OR THE SERVICES.
+            PERMITTED BY LAW, TRAILS COFFEE IS NOT LIABLE FOR INDIRECT,
+            INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING OUT
+            OF OR RELATED TO THESE TERMS, THE APP, OR THE SERVICES.
           </p>
           <p>
             6.6 <strong>Maximum Liability:</strong> To the maximum extent
-            permitted by applicable law, the Site and Services are provided ‘as
-            is’ without warranties of any kind. This does not affect any
+            permitted by applicable law, the App and Services are provided 'as
+            is' without warranties of any kind. This does not affect any
             statutory warranties or rights which cannot be excluded under your
-            jurisdiction’s law.
+            jurisdiction's law.
           </p>
           <p><strong>7. Indemnification and Release</strong></p>
           <p>
-            You agree to indemnify and hold harmless Cashu.me and its affiliates
-            from claims arising out of your use of the Site or Services. If you
-            have a dispute with any Mint or third party, you release Cashu.me
-            from all related claims.
+            You agree to indemnify and hold harmless Trails Coffee and its
+            affiliates from claims arising out of your use of the App or
+            Services. If you have a dispute with any Mint or third party, you
+            release Trails Coffee from all related claims.
           </p>
           <p><strong>8. Mediation and Dispute Resolution</strong></p>
           <p>
             8.1 <strong>Mediation Requirement:</strong> If a dispute arises out
-            of or relates to these Terms, the Site, or the Services, the parties
+            of or relates to these Terms, the App, or the Services, the parties
             agree to first attempt to resolve the dispute through good-faith
             mediation administered by a reputable mediation provider. Each party
             shall bear its own costs for the mediation, and the costs of the

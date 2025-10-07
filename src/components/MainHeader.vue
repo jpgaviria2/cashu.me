@@ -15,7 +15,7 @@
         <img
           src="~assets/trails-logo.png"
           alt="Trails Coffee"
-          style="height: 40px; max-width: 200px; object-fit: contain"
+          style="height: 60px; max-width: 300px; object-fit: contain"
         />
       </q-toolbar-title>
       <transition
@@ -224,7 +224,8 @@ export default defineComponent({
 
 .q-toolbar {
   flex-wrap: nowrap;
-  min-height: 50px; /* Ensure consistent height */
+  min-height: 80px; /* Increased height for larger logo */
+  padding: 10px 0;
 }
 
 .q-toolbar-title {
