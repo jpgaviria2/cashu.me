@@ -204,21 +204,23 @@ export default defineComponent({
     },
     balancesOptions: function () {
       const mint = this.activeMint();
-      const mintBalances = Object.entries(mint.allBalances).map(([key, value]) => ({
-        label: key,
-        value: key,
-      }));
-      
+      const mintBalances = Object.entries(mint.allBalances).map(
+        ([key, value]) => ({
+          label: key,
+          value: key,
+        })
+      );
+
       // Ensure "points" is always available, even if mint only has "sat"
-      const hasPoints = mintBalances.some(b => b.value === 'points');
+      const hasPoints = mintBalances.some((b) => b.value === "points");
       if (!hasPoints) {
         // Add points option that maps to sat balance
         mintBalances.unshift({
-          label: 'points',
-          value: 'points',
+          label: "points",
+          value: "points",
         });
       }
-      
+
       return mintBalances;
     },
     allMintKeysets: function () {
@@ -275,5 +277,14 @@ export default defineComponent({
 }
 .animated.fadeInDown {
   animation-duration: 0.3s;
+}
+
+/* Trails Coffee gradient for balance */
+h3 strong {
+  background: linear-gradient(135deg, #6b4423 0%, #cd853f 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-family: "Playfair Display", serif;
 }
 </style>

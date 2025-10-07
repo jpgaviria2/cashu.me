@@ -4,8 +4,8 @@
   "description": "Your Trails Coffee rewards and gift cards powered by ecash.",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#8B4513",
-  "theme_color": "#8B4513",
+  "background_color": "#6B4423",
+  "theme_color": "#6B4423",
   "protocol_handlers": [
     {
       "protocol": "web+cashu",

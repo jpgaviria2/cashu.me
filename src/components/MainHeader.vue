@@ -11,7 +11,13 @@
         @click="toggleLeftDrawer"
         :disable="uiStore.globalMutexLock"
       />
-      <q-toolbar-title></q-toolbar-title>
+      <q-toolbar-title class="flex flex-center">
+        <img
+          src="~assets/trails-logo.png"
+          alt="Trails Coffee"
+          style="height: 40px; max-width: 200px; object-fit: contain"
+        />
+      </q-toolbar-title>
       <transition
         appear
         enter-active-class="animated wobble"

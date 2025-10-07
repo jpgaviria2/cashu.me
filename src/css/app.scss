@@ -1,13 +1,25 @@
 // app global css in SCSS form
 
-// Import Inter font from Google Fonts
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+// Import Trails Coffee fonts
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Quicksand:wght@400;700&display=swap");
 
-// Apply Inter as the primary font throughout the application
+// Apply Trails Coffee typography
 body {
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue",
     sans-serif;
+  background: #fffef7 !important; // Trails Coffee warm white
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Playfair Display", serif;
+  font-weight: 600;
 }
 
 // prevent pull to refresh
@@ -45,16 +57,18 @@ body,
 }
 
 .custom-btn {
-  background: $grey-9;
+  background: linear-gradient(135deg, #6b4423 0%, #8b4513 100%) !important;
   color: white;
-  border-radius: 8px;
+  border-radius: 16px;
   height: 80px;
-  box-shadow: none;
+  box-shadow: 0 8px 25px rgba(107, 68, 35, 0.3);
   font-size: 18px;
+  transition: all 0.3s ease;
 }
 
 .custom-btn:hover {
-  background: $grey-8;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 35px rgba(107, 68, 35, 0.4);
 }
 
 .custom-btn-text {
