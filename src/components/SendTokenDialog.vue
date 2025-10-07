@@ -50,7 +50,7 @@
                 </span>
               </span>
               <span
-                v-if="sendData.amount && bitcoinPrice && activeUnit == 'sat'"
+                v-if="sendData.amount && bitcoinPrice && activeUnit == 'points'"
                 class="q-ml-xs text-subtitle2 text-grey-6"
               >
                 ({{

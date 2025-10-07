@@ -15,7 +15,7 @@ import ts from "typescript";
 import { useSettingsStore } from "./settings";
 
 const unitTickerShortMap = {
-  sat: "sats",
+  points: "points",
   usd: "USD",
   eur: "EUR",
   msat: "msats",
@@ -24,7 +24,7 @@ const unitTickerShortMap = {
 export const useUiStore = defineStore("ui", {
   state: () => ({
     hideBalance: useLocalStorage<boolean>("cashu.ui.hideBalance", false),
-    tickerLong: "Satoshis",
+    tickerLong: "Points",
     showInvoiceDetails: false,
     showSendDialog: false,
     showReceiveDialog: false,
@@ -73,19 +73,10 @@ export const useUiStore = defineStore("ui", {
     setTab(tab: string) {
       this.tab = tab;
     },
-    formatSat: function (value: number) {
-      // convert value to integer
-      if (useSettingsStore().bip177BitcoinSymbol) {
-        if (value >= 0) {
-          return "₿" + new Intl.NumberFormat(navigator.language).format(value);
-        } else {
-          return (
-            "-₿" +
-            new Intl.NumberFormat(navigator.language).format(Math.abs(value))
-          );
-        }
-      }
-      return new Intl.NumberFormat(navigator.language).format(value) + " sat";
+    formatPoints: function (value: number) {
+      return (
+        new Intl.NumberFormat(navigator.language).format(value) + " points"
+      );
     },
     fromMsat: function (value: number) {
       return new Intl.NumberFormat(navigator.language).format(value) + " msat";
@@ -95,22 +86,25 @@ export const useUiStore = defineStore("ui", {
       currency: string,
       showBalance = false
     ) {
-      if (currency == undefined) {
-        currency = "sat";
+      try {
+        if (currency == undefined) {
+          currency = "points";
+        }
+        if (useUiStore().hideBalance && !showBalance) {
+          return "****";
+        }
+        if (currency == "points") return this.formatPoints(value);
+        if (currency == "msat") return this.fromMsat(value);
+        if (currency == "usd") value = value / 100;
+        if (currency == "eur") value = value / 100;
+        return new Intl.NumberFormat(navigator.language, {
+          style: "currency",
+          currency: currency,
+        }).format(value);
+      } catch (error) {
+        console.error("Error in formatCurrency:", error);
+        return `${value} ${currency || "points"}`;
       }
-      if (useUiStore().hideBalance && !showBalance) {
-        return "****";
-      }
-      if (currency == "sat") return this.formatSat(value);
-      if (currency == "msat") return this.fromMsat(value);
-      if (currency == "usd") value = value / 100;
-      if (currency == "eur") value = value / 100;
-      return new Intl.NumberFormat(navigator.language, {
-        style: "currency",
-        currency: currency,
-      }).format(value);
-      // + " " +
-      // currency.toUpperCase()
     },
     toggleDebugConsole() {
       this.showDebugConsole = !this.showDebugConsole;
@@ -160,11 +154,19 @@ export const useUiStore = defineStore("ui", {
   },
   getters: {
     tickerShort() {
-      const unit = useMintsStore().activeUnit;
-      if (unit == "sat" && useSettingsStore().bip177BitcoinSymbol) {
-        return "₿";
-      } else {
-        return unitTickerShortMap[unit as keyof typeof unitTickerShortMap];
+      try {
+        const unit = useMintsStore().activeUnit;
+        if (unit == "points" && useSettingsStore().bip177BitcoinSymbol) {
+          return "₿";
+        } else {
+          return (
+            unitTickerShortMap[unit as keyof typeof unitTickerShortMap] ||
+            "points"
+          );
+        }
+      } catch (error) {
+        console.error("Error in tickerShort getter:", error);
+        return "points";
       }
     },
     ndefSupported(): boolean {

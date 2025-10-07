@@ -133,278 +133,30 @@
         </div>
       </q-list>
     </div>
-    <div class="q-pt-xs q-px-md" ref="addMintDiv">
-      <div class="add-mint-container">
-        <div class="section-divider q-mb-md">
-          <div class="divider-line"></div>
-          <div class="divider-text">
-            {{ $t("MintSettings.add.title") }}
-          </div>
-          <div class="divider-line"></div>
-        </div>
-
-        <div
-          class="add-mint-description q-mb-lg text-left"
-          style="color: rgba(255, 255, 255, 0.7)"
-        >
-          {{ $t("MintSettings.add.description") }}
-        </div>
-
-        <div class="add-mint-inputs">
-          <q-input
-            rounded
-            outlined
-            v-model="addMintData.url"
-            placeholder="https://"
-            @keydown.enter.prevent="sanitizeMintUrlAndShowAddDialog"
-            ref="mintInput"
-            class="q-mb-md mint-input url-input"
-          />
-
-          <q-input
-            rounded
-            outlined
-            v-model="addMintData.nickname"
-            :placeholder="$t('MintSettings.add.inputs.nickname.placeholder')"
-            @keydown.enter.prevent="sanitizeMintUrlAndShowAddDialog"
-            ref="mintNicknameInput"
-            class="mint-input"
-          />
-        </div>
-
-        <div class="add-mint-actions">
-          <div class="row justify-between items-center q-mt-xs">
-            <q-btn
-              flat
-              :disable="addMintData.url.length === 0"
-              @click="
-                addMintData.url.length > 0
-                  ? sanitizeMintUrlAndShowAddDialog()
-                  : null
-              "
-              class="text-white"
-              :class="{ 'text-grey-7': addMintData.url.length === 0 }"
-            >
-              <q-icon name="add" size="20px" class="q-mr-sm" />
-              <span>{{ $t("MintSettings.add.actions.add_mint.label") }}</span>
-            </q-btn>
-
-            <q-btn flat @click="showCamera" class="text-white">
-              <q-icon name="qr_code" size="20px" class="q-mr-sm" />
-              <span>{{ $t("MintSettings.add.actions.scan.label") }}</span>
-            </q-btn>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- nostr -->
+    <!-- Advanced Features Section -->
     <div class="section-divider q-mb-md">
       <div class="divider-line"></div>
       <div class="divider-text">
-        {{ $t("MintSettings.discover.title") }}
+        {{ $t("MintSettings.advanced.title") }}
       </div>
       <div class="divider-line"></div>
-    </div>
-    <div class="q-px-xs text-left" on-left>
-      <q-list padding>
-        <q-item>
-          <q-item-section>
-            <q-item-label overline>
-              {{ $t("MintSettings.discover.overline") }}</q-item-label
-            >
-            <q-item-label caption>{{
-              $t("MintSettings.discover.caption")
-            }}</q-item-label>
-          </q-item-section>
-        </q-item>
-        <q-item class="q-pt-sm">
-          <q-btn
-            class="q-ml-sm q-px-md"
-            color="primary"
-            rounded
-            outline
-            :loading="discoveringMints"
-            @click="fetchMintsFromNdk"
-            >{{ $t("MintSettings.discover.actions.discover.label") }}
-            <template v-slot:loading>
-              <q-spinner-hourglass class="on-left" />
-              {{ $t("MintSettings.discover.actions.discover.in_progress") }}
-            </template>
-          </q-btn>
-        </q-item>
-        <div v-if="mintRecommendations.length > 0">
-          <!-- for each entry in mintRecommendations, display the url and the count how often it was recommended -->
-          <q-item>
-            <q-item-section>
-              <q-item-label overline>
-                {{
-                  $t("MintSettings.discover.recommendations.overline", {
-                    length: mintRecommendations.length,
-                  })
-                }}</q-item-label
-              >
-              <q-item-label caption
-                ><i18n-t
-                  keypath="MintSettings.discover.recommendations.caption"
-                >
-                  <template v-slot:link>
-                    <a
-                      href="https://bitcoinmints.com"
-                      target="_blank"
-                      class="text-primary"
-                      >bitcoinmints.com</a
-                    >
-                  </template>
-                </i18n-t>
-              </q-item-label>
-            </q-item-section>
-          </q-item>
-          <q-expansion-item
-            dense
-            dense-toggle
-            class="text-left"
-            :label="
-              $t('MintSettings.discover.recommendations.actions.browse.label')
-            "
-          >
-            <q-item v-for="mint in mintRecommendations" :key="mint.url">
-              <q-item-section
-                class="q-mx-none q-pl-none"
-                style="max-width: 1.05em"
-              >
-                <q-icon
-                  name="content_copy"
-                  @click="copyText(mint.url)"
-                  size="1em"
-                  color="grey"
-                  class="q-mr-xs cursor-pointer"
-                />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label caption style="word-break: break-word">{{
-                  mint.url
-                }}</q-item-label>
-              </q-item-section>
-              <q-item-section side>
-                <q-badge :label="mint.count" color="primary" />
-              </q-item-section>
-            </q-item>
-          </q-expansion-item>
-        </div>
-      </q-list>
     </div>
 
-    <div class="section-divider q-mb-md">
-      <div class="divider-line"></div>
-      <div class="divider-text">
-        {{ $t("MintSettings.swap.title") }}
-      </div>
-      <div class="divider-line"></div>
-    </div>
-    <div class="q-px-xs text-left" on-left>
-      <q-list padding>
-        <q-item>
-          <q-item-section>
-            <q-item-label overline>
-              {{ $t("MintSettings.swap.overline") }}</q-item-label
-            >
-            <q-item-label caption>
-              {{ $t("MintSettings.swap.caption") }}
-            </q-item-label>
-          </q-item-section>
-        </q-item>
-        <q-item class="q-pt-sm">
-          <q-select
-            clearable
-            rounded
-            outlined
-            dense
-            color="primary"
-            v-model="swapData.fromUrl"
-            :options="swapAmountDataOptions()"
-            option-value="url"
-            option-label="optionLabel"
-            :label="$t('MintSettings.swap.inputs.from.label')"
-            style="
-              min-width: 200px;
-              width: 100%;
-              font-family: monospace;
-              font-size: 0.9em;
-            "
-            :disable="swapBlocking"
-          />
-        </q-item>
-        <q-item>
-          <q-select
-            clearable
-            rounded
-            outlined
-            dense
-            color="primary"
-            v-model="swapData.toUrl"
-            :options="swapAmountDataOptions()"
-            option-value="url"
-            option-label="optionLabel"
-            :label="$t('MintSettings.swap.inputs.to.label')"
-            style="
-              min-width: 200px;
-              width: 100%;
-              font-family: monospace;
-              font-size: 0.9em;
-            "
-            :disable="swapBlocking"
-          />
-        </q-item>
-        <q-item>
-          <q-input
-            rounded
-            outlined
-            dense
-            v-model.number="swapData.amount"
-            type="number"
-            :label="
-              $t('MintSettings.swap.inputs.amount.label', {
-                ticker: tickerShort,
-              })
-            "
-            style="min-width: 200px"
-            @keydown.enter.prevent="extractAndMintAmountSwap(swapAmountData)"
-            :disable="
-              !swapData.fromUrl ||
-              !swapData.toUrl ||
-              swapData.fromUrl == swapData.toUrl ||
-              swapBlocking
-            "
-          ></q-input>
-          <q-btn
-            class="q-ml-sm q-px-md"
-            color="primary"
-            rounded
-            @click="extractAndMintAmountSwap(swapAmountData)"
-            :disable="
-              !swapData.fromUrl ||
-              !swapData.toUrl ||
-              !(swapData.amount > 0) ||
-              swapData.fromUrl == swapData.toUrl
-            "
-            :loading="swapBlocking"
-          >
-            <q-icon size="xs" name="swap_horiz" class="q-pr-xs" />
-            {{ $t("MintSettings.swap.actions.swap.label") }}
-            <template v-slot:loading>
-              <q-spinner-hourglass size="xs" />
-              {{ $t("MintSettings.swap.actions.swap.in_progress") }}
-            </template>
-          </q-btn>
-        </q-item>
-      </q-list>
-    </div>
+    <q-expansion-item
+      dense
+      dense-toggle
+      class="text-left q-mb-md"
+      :label="$t('MintSettings.advanced.actions.show_advanced.label')"
+      :caption="$t('MintSettings.advanced.actions.show_advanced.description')"
+    >
+      <AdvancedFeatures />
+    </q-expansion-item>
   </div>
 </template>
 <script lang="ts">
 import { ref, defineComponent, onMounted, onBeforeUnmount } from "vue";
 import { getShortUrl } from "src/js/wallet-helpers";
+import AdvancedFeatures from "components/AdvancedFeatures.vue";
 import { mapActions, mapState, mapWritableState } from "pinia";
 import { useMintsStore, MintClass } from "src/stores/mints";
 import { useWalletStore } from "src/stores/wallet";
@@ -426,6 +178,7 @@ export default defineComponent({
   mixins: [windowMixin],
   components: {
     AddMintDialog,
+    AdvancedFeatures,
   },
   props: {},
   setup() {
@@ -456,19 +209,6 @@ export default defineComponent({
   },
   data: function () {
     return {
-      discoveringMints: false,
-      addingMint: false,
-      swapData: {
-        fromUrl: {
-          url: "",
-          optionLabel: "",
-        },
-        toUrl: {
-          url: "",
-          optionLabel: "",
-        },
-        amount: undefined,
-      },
       activatingMintUrl: "",
     };
   },
@@ -480,34 +220,11 @@ export default defineComponent({
       "activeUnit",
       "mints",
       "activeProofs",
-      "addMintBlocking",
     ]),
-    ...mapState(useNostrStore, ["pubkey", "mintRecommendations"]),
-    ...mapState(useWorkersStore, ["invoiceWorkerRunning"]),
-    ...mapWritableState(useMintsStore, ["addMintData", "showAddMintDialog"]),
-    ...mapState(useUiStore, ["tickerShort"]),
-    ...mapState(useSwapStore, ["swapAmountData"]),
-    ...mapWritableState(useSwapStore, ["swapBlocking"]),
-  },
-  watch: {
-    // if swapBlocking is true and invoiceWorkerRunning changes to false, then swapBlocking should be set to false
-    invoiceWorkerRunning: function (val) {
-      if (this.swapBlocking && !val) {
-        this.swapBlocking = false;
-      }
-    },
   },
   methods: {
-    ...mapActions(useNostrStore, [
-      "init",
-      "initNdkReadOnly",
-      "getUserPubkey",
-      "fetchEventsFromUser",
-      "fetchMints",
-    ]),
     ...mapActions(useP2PKStore, ["generateKeypair", "showKeyDetails"]),
     ...mapActions(useMintsStore, [
-      "addMint",
       "removeMint",
       "activateMintUrl",
       "updateMint",
@@ -517,7 +234,6 @@ export default defineComponent({
     ...mapActions(useWalletStore, ["decodeRequest", "mintOnPaid"]),
     ...mapActions(useWorkersStore, ["clearAllWorkers"]),
     ...mapActions(useCameraStore, ["closeCamera", "showCamera"]),
-    ...mapActions(useSwapStore, ["mintAmountSwap"]),
     activateMintUrlInternal: async function (mintUrl) {
       this.activatingMintUrl = mintUrl;
       console.log(`Activating mint ${this.activatingMintUrl}`);
@@ -529,97 +245,8 @@ export default defineComponent({
         this.activatingMintUrl = "";
       }
     },
-    validateMintUrl: function (url) {
-      try {
-        new URL(url);
-        return true;
-      } catch (e) {
-        return false;
-      }
-    },
-    sanitizeMintUrlAndShowAddDialog: function () {
-      // if no protocol is given, add https
-      if (!this.addMintData.url.match(/^[a-zA-Z]+:\/\//)) {
-        this.addMintData.url = "https://" + this.addMintData.url;
-      }
-      if (!this.validateMintUrl(this.addMintData.url)) {
-        notifyError(
-          this.$i18n.t("MintSettings.add.actions.add_mint.error_invalid_url")
-        );
-        return;
-      }
-      let urlObj = new URL(this.addMintData.url);
-      urlObj.hostname = urlObj.hostname.toLowerCase();
-      this.addMintData.url = urlObj.toString();
-      this.addMintData.url = this.addMintData.url.replace(/\/$/, "");
-      this.showAddMintDialog = true;
-    },
-    addMintInternal: function (mintToAdd, verbose) {
-      this.addingMint = true;
-      try {
-        this.addMint(mintToAdd, verbose);
-        this.addMintData = { url: "", nickname: "" };
-      } finally {
-        this.addingMint = false;
-      }
-    },
     mintClass(mint) {
       return new MintClass(mint);
-    },
-    swapAmountDataOptions: function () {
-      let options = [];
-      for (const [i, m] of Object.entries(this.mints)) {
-        const unitStr = "sat";
-        const unitBalance = this.mintClass(m).unitBalance(unitStr);
-        const balanceStr = useUiStore().formatCurrency(unitBalance, unitStr);
-        options.push({
-          url: m.url,
-          optionLabel:
-            (m.nickname || getShortUrl(m.url)) + " (" + balanceStr + ")",
-        });
-      }
-      return options;
-    },
-    clearSwapData: function () {
-      this.swapData.fromUrl = "";
-      this.swapData.toUrl = "";
-      this.swapData.amount = undefined;
-    },
-    extractAndMintAmountSwap: async function (swapAmountData) {
-      swapAmountData.fromUrl = this.swapData.fromUrl.url;
-      swapAmountData.toUrl = this.swapData.toUrl.url;
-      swapAmountData.amount = this.swapData.amount;
-      await this.mintAmountSwap(swapAmountData);
-      this.clearSwapData();
-    },
-    fetchMintsFromNdk: async function () {
-      this.discoveringMints = true;
-      await this.initNdkReadOnly();
-      console.log("### fetch mints");
-      let maxTries = 5;
-      let tries = 0;
-      let mintUrls = [];
-      while (mintUrls.length == 0 && tries < maxTries) {
-        try {
-          mintUrls = await this.fetchMints();
-        } catch (e) {
-          console.log("Error fetching mints", e);
-        }
-        tries++;
-      }
-      if (mintUrls.length == 0) {
-        this.notifyError(
-          this.$i18n.t("MintSettings.discover.actions.discover.error_no_mints")
-        );
-      } else {
-        this.notifySuccess(
-          this.$i18n.t("MintSettings.discover.actions.discover.success", {
-            length: mintUrls.length,
-          })
-        );
-      }
-      console.log(mintUrls);
-      this.discoveringMints = false;
     },
     showMintInfo: async function (mint) {
       // Fetch fresh mint info before navigating

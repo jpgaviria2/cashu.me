@@ -80,9 +80,9 @@
         Audit information is made available by
         <a :href="auditUrl">{{ auditUrlShort }}</a
         >. The current balance held by the auditor for this mint is
-        <span class="text-bold">{{ mintInfo.balance }} sats</span>, with a total
-        of
-        <span class="text-bold">{{ mintInfo.sum_donations }} sats</span>
+        <span class="text-bold">{{ mintInfo.balance }} points</span>, with a
+        total of
+        <span class="text-bold">{{ mintInfo.sum_donations }} points</span>
         donated so far. To support continued auditing, you can
         <span
           class="text-bold cursor-pointer text-primary"
@@ -256,7 +256,7 @@ export default {
         const paymentRequest = paymentRequestString.replace(/"/g, "");
         console.log("# AuditorPaymentRequests", paymentRequest);
         await mintStore.activateMintUrl(this.mintUrl);
-        await mintStore.activateUnit("sat");
+        await mintStore.activateUnit("points");
         await walletStore.decodeRequest(paymentRequest);
         // close the mint info dialog
         this.$emit("close");

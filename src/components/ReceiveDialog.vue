@@ -39,7 +39,7 @@
               </div>
               <div class="text-left">
                 <div class="text-weight-bold custom-btn-text">
-                  {{ $t("ReceiveDialog.actions.ecash.label") }}
+                  {{ $t("ReceiveDialog.actions.points.label") }}
                 </div>
               </div>
             </div>

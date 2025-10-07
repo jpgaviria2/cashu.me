@@ -638,12 +638,82 @@ export default {
       this.showAddMintDialog = true;
       this.addMintData = { url: addMintUrl };
     }
-    if (!localStorage.getItem("cashu.activeMintUrl")) {
-      this.setTab("mints");
+    // Auto-activate Trails Coffee mint on first load
+    try {
+      if (
+        !localStorage.getItem("cashu.activeMintUrl") ||
+        localStorage.getItem("cashu.activeMintUrl") === ""
+      ) {
+        await this.activateMintUrl("https://ecash.trailscoffee.com", false, true);
+      } else {
+        // Ensure Trails Coffee mint is available even if another mint is active
+        const mintsStore = useMintsStore();
+        const trailsMint = mintsStore.mints.find(
+          (m) => m.url === "https://ecash.trailscoffee.com"
+        );
+        if (!trailsMint) {
+          console.log("Adding Trails Coffee mint...");
+          const addedMint = await mintsStore.addMint(
+            { url: "https://ecash.trailscoffee.com", nickname: "Trails Coffee" },
+            false
+          );
+          console.log("Added mint:", addedMint);
+          // The addMint function already activates the mint, but let's ensure it's active
+          if (mintsStore.activeMintUrl !== "https://ecash.trailscoffee.com") {
+            console.log("Activating Trails Coffee mint...");
+            await this.activateMintUrl(
+              "https://ecash.trailscoffee.com",
+              false,
+              true
+            );
+          }
+        } else {
+          console.log(
+            "Trails Coffee mint already exists, ensuring it's active..."
+          );
+          if (mintsStore.activeMintUrl !== "https://ecash.trailscoffee.com") {
+            await this.activateMintUrl(
+              "https://ecash.trailscoffee.com",
+              false,
+              true
+            );
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error initializing Trails Coffee mint:", error);
+      // Continue with app initialization even if mint setup fails
     }
 
     console.log("Mint URL " + this.activeMintUrl);
     console.log("Wallet URL " + this.baseURL);
+
+    // Debug: Check if mint has keysets
+    try {
+      const mintsStore = useMintsStore();
+      const activeMint = mintsStore.mints.find(
+        (m) => m.url === this.activeMintUrl
+      );
+      if (activeMint) {
+        console.log("Active mint keysets:", activeMint.keysets);
+        console.log("Active mint keys:", activeMint.keys);
+
+        // If no keysets, try to fetch them again
+        if (!activeMint.keysets || activeMint.keysets.length === 0) {
+          console.log("No keysets found, attempting to fetch...");
+          try {
+            await mintsStore.fetchMintKeys(activeMint);
+            console.log("Keysets fetched successfully:", activeMint.keysets);
+          } catch (error) {
+            console.error("Failed to fetch keysets:", error);
+          }
+        }
+      } else {
+        console.log("No active mint found");
+      }
+    } catch (error) {
+      console.error("Error in debug section:", error);
+    }
 
     // get token to receive tokens from a link
     if (params.get("token") || hash.includes("token")) {

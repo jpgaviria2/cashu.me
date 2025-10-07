@@ -36,7 +36,7 @@
               </div>
               <div class="text-left">
                 <div class="text-weight-bold custom-btn-text">
-                  {{ $t("SendDialog.actions.ecash.label") }}
+                  {{ $t("SendDialog.actions.points.label") }}
                 </div>
               </div>
             </div>

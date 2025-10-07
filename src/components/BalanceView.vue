@@ -64,7 +64,7 @@
                 </strong>
               </h3>
               <div v-if="bitcoinPrice">
-                <strong v-if="this.activeUnit == 'sat'">
+                <strong v-if="this.activeUnit == 'points'">
                   <AnimatedNumber
                     :value="
                       (currentCurrencyPrice / 100000000) * getTotalBalance
@@ -79,7 +79,7 @@
                     :value="
                       (getTotalBalance / 100 / currentCurrencyPrice) * 100000000
                     "
-                    :format="(val) => formatCurrency(val, 'sat')"
+                    :format="(val) => formatCurrency(val, 'points')"
                   />
                 </strong>
                 <q-tooltip>
@@ -204,10 +204,22 @@ export default defineComponent({
     },
     balancesOptions: function () {
       const mint = this.activeMint();
-      return Object.entries(mint.allBalances).map(([key, value]) => ({
+      const mintBalances = Object.entries(mint.allBalances).map(([key, value]) => ({
         label: key,
         value: key,
       }));
+      
+      // Ensure "points" is always available, even if mint only has "sat"
+      const hasPoints = mintBalances.some(b => b.value === 'points');
+      if (!hasPoints) {
+        // Add points option that maps to sat balance
+        mintBalances.unshift({
+          label: 'points',
+          value: 'points',
+        });
+      }
+      
+      return mintBalances;
     },
     allMintKeysets: function () {
       return [].concat(...this.mints.map((m) => m.keysets));

@@ -261,7 +261,7 @@ export default {
       connection: {
         copy_tooltip: "Copier la chaîne de connexion",
         qr_tooltip: "Afficher le code QR",
-        allowance_label: "Montant restant (sat)",
+        allowance_label: "Montant restant (points)",
       },
       relays: {
         expand_label: "Cliquez pour modifier les relais",

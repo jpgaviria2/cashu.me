@@ -84,6 +84,41 @@
       </q-list>
     </div>
 
+    <!-- TERMS & LEGAL SECTION -->
+    <div class="section-divider q-my-md">
+      <div class="divider-line"></div>
+      <div class="divider-text">
+        {{ $t("Settings.sections.terms_legal") }}
+      </div>
+      <div class="divider-line"></div>
+    </div>
+
+    <div class="q-py-sm q-px-xs text-left" on-left>
+      <q-list padding>
+        <q-item>
+          <q-item-section>
+            <q-item-label overline class="text-weight-bold">{{
+              $t("Settings.terms_legal.terms.title")
+            }}</q-item-label>
+            <q-item-label caption>
+              {{ $t("Settings.terms_legal.terms.description") }}
+            </q-item-label>
+          </q-item-section>
+        </q-item>
+        <q-item>
+          <q-btn
+            class="q-ml-sm q-px-md"
+            color="primary"
+            size="sm"
+            rounded
+            outline
+            @click="showTermsDialog = true"
+            >{{ $t("Settings.terms_legal.terms.button") }}</q-btn
+          >
+        </q-item>
+      </q-list>
+    </div>
+
     <!-- LIGHTNING ADDRESS SECTION -->
     <div class="section-divider q-my-md">
       <div class="divider-line"></div>
@@ -1734,6 +1769,112 @@
 
   <!-- NWC DIALOG -->
   <NWCDialog v-model="showNWCDialog" />
+
+  <!-- TERMS DIALOG -->
+  <q-dialog v-model="showTermsDialog" full-width>
+    <q-card>
+      <q-card-section class="row items-center q-pb-none">
+        <div class="text-h6">{{ $t("Settings.terms_legal.terms.title") }}</div>
+        <q-space />
+        <q-btn icon="close" flat round dense v-close-popup />
+      </q-card-section>
+      <q-card-section class="q-pt-none">
+        <div style="max-height: 70vh; overflow-y: auto">
+          <div class="text-left">
+            <p><strong>Last Updated: 20.12.2024</strong></p>
+            <p>
+              <strong>
+                IMPORTANT NOTICE: THESE TERMS OF SERVICE INCLUDE A
+                MEDIATION-FIRST CLAUSE REQUIRING MEDIATION BEFORE ARBITRATION OR
+                LITIGATION. PLEASE READ THESE TERMS CAREFULLY. IF YOU DO NOT
+                AGREE, DO NOT USE TRAILS COFFEE REWARDS.
+              </strong>
+            </p>
+            <p>
+              <strong>
+                ALL REFERENCES TO LAW, REGULATION, AND JURISDICTION IN THESE
+                TERMS ARE SUBJECT TO CHANGE WITHOUT NOTICE. PLEASE REVIEW THESE
+                TERMS REGULARLY.
+              </strong>
+            </p>
+            <p>
+              These Terms of Service (these "Terms") constitute the entire
+              agreement and understanding between you ("you" or "your") and
+              Trails Coffee ("Trails Coffee," "we," "us," or "our") regarding
+              your use of the Trails Coffee Rewards app and any related
+              applications, software, code, or services (collectively, the "App"
+              or "Services"). By accessing or using the App or Services, you
+              acknowledge that you have read, understand, and agree to be bound
+              by these Terms. If you do not agree, do not access or use the App
+              or Services.
+            </p>
+            <p><strong>1. Nature of the Services</strong></p>
+            <p>
+              1.1 <strong>Non-Custodial Web Application:</strong> Trails Coffee
+              provides a non-custodial web application ("rewards app") that is
+              executed entirely on your device. Our App merely makes available
+              client-side code implementing the open-source ecash protocol. We
+              do not run a server that holds your rewards or executes
+              transactions on your behalf.
+            </p>
+            <p>
+              1.2 <strong>No Control Over Mints:</strong> Trails Coffee does not
+              issue ecash and does not operate or control any Mint. The choice
+              of any Mint and any transaction or relationship you establish with
+              that Mint is solely between you and that Mint. Trails Coffee has
+              no involvement, responsibility, or liability in any such
+              interaction.
+            </p>
+            <p>
+              1.3 <strong>No Funds Access:</strong> At no time does Trails
+              Coffee have custody, possession, or control of your rewards.
+              Transactions occur solely by your actions and through your chosen
+              Mint. We do not monitor, verify, or facilitate transfers between
+              you and any Mint or other parties.
+            </p>
+            <p>
+              1.4 <strong>Web Server Only:</strong> Trails Coffee does not
+              operate any backend services for the ecash protocol. We only
+              provide the client-side application code.
+            </p>
+            <p><strong>2. Use of the Services</strong></p>
+            <p>
+              2.1 <strong>Eligibility:</strong> You must be at least 18 years
+              old to use the Services. By using the Services, you represent and
+              warrant that you meet this age requirement.
+            </p>
+            <p>
+              2.2 <strong>Prohibited Uses:</strong> You agree not to use the
+              Services for any unlawful purpose or in any way that could damage,
+              disable, overburden, or impair the Services.
+            </p>
+            <p><strong>3. Disclaimer of Warranties</strong></p>
+            <p>
+              THE SERVICES ARE PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT ANY
+              WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT
+              NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+              PARTICULAR PURPOSE, OR NON-INFRINGEMENT.
+            </p>
+            <p><strong>4. Limitation of Liability</strong></p>
+            <p>
+              IN NO EVENT SHALL TRAILS COFFEE BE LIABLE FOR ANY INDIRECT,
+              INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING
+              WITHOUT LIMITATION, LOSS OF PROFITS, DATA, USE, GOODWILL, OR OTHER
+              INTANGIBLE LOSSES, RESULTING FROM YOUR USE OF THE SERVICES.
+            </p>
+            <p><strong>5. Contact Information</strong></p>
+            <p>
+              If you have any questions about these Terms, please contact us at
+              info@trailscoffee.com
+            </p>
+          </div>
+        </div>
+      </q-card-section>
+      <q-card-actions align="right">
+        <q-btn flat label="Close" color="primary" v-close-popup />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
 </template>
 <script lang="ts">
 import { defineComponent } from "vue";
@@ -1835,6 +1976,7 @@ export default defineComponent({
       hideMnemonic: true,
       confirmMnemonic: false,
       confirmNuke: false,
+      showTermsDialog: false,
       nip46Token: "",
       nip07SignerAvailable: false,
       newRelay: "",

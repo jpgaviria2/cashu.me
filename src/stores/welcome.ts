@@ -17,28 +17,24 @@ export const useWelcomeStore = defineStore("welcome", {
     currentSlide: useLocalStorage<number>("cashu.welcome.currentSlide", 0),
     seedPhraseValidated: useLocalStorage<boolean>(
       "cashu.welcome.seedPhraseValidated",
-      false
+      true // Skip seed phrase validation on startup
     ),
     termsAccepted: useLocalStorage<boolean>(
       "cashu.welcome.termsAccepted",
-      false
+      true // Skip terms acceptance on startup
     ),
   }),
   getters: {
-    // Determines if the current slide is the last one
-    isLastSlide: (state) => state.currentSlide === 3, // Adjust if you have more slides
+    // Determines if the current slide is the last one (only 2 slides now)
+    isLastSlide: (state) => state.currentSlide === 1,
 
     // Determines if the user can proceed to the next slide
     canProceed: (state) => {
       switch (state.currentSlide) {
         case 0:
-          return true;
+          return true; // Welcome slide
         case 1:
-          return true; // Assuming no validation for PWA install
-        case 2:
-          return state.seedPhraseValidated;
-        case 3:
-          return state.termsAccepted;
+          return true; // PWA install slide
         default:
           return false;
       }

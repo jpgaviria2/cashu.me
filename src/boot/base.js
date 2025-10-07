@@ -57,12 +57,12 @@ window.windowMixin = {
     },
     formatCurrency: function (value, currency, showBalance = false) {
       if (currency == undefined) {
-        currency = "sat";
+        currency = "points";
       }
       if (useUiStore().hideBalance && !showBalance) {
         return "****";
       }
-      if (currency == "sat") return this.formatSat(value);
+      if (currency == "points") return this.formatPoints(value);
       if (currency == "msat") return this.fromMsat(value);
       if (currency == "usd") value = value / 100;
       if (currency == "eur") value = value / 100;
@@ -73,19 +73,8 @@ window.windowMixin = {
       // + " " +
       // currency.toUpperCase()
     },
-    formatSat: function (value) {
-      // convert value to integer
-      value = parseInt(value);
-      if (useSettingsStore().bip177BitcoinSymbol) {
-        if (value >= 0) {
-          return "₿" + new Intl.NumberFormat(window.LOCALE).format(value);
-        } else {
-          return (
-            "-₿" + new Intl.NumberFormat(window.LOCALE).format(Math.abs(value))
-          );
-        }
-      }
-      return new Intl.NumberFormat(window.LOCALE).format(value) + " sat";
+    formatPoints: function (value) {
+      return new Intl.NumberFormat(window.LOCALE).format(value) + " points";
     },
     fromMsat: function (value) {
       value = parseInt(value);

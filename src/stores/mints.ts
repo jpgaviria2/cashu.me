@@ -105,13 +105,26 @@ export const useMintsStore = defineStore("mints", {
   state: () => {
     const t = i18n.global.t;
     const activeProofs = ref<WalletProof[]>([]);
-    const activeUnit = useLocalStorage<string>("cashu.activeUnit", "sat");
-    const activeMintUrl = useLocalStorage<string>("cashu.activeMintUrl", "");
+    const activeUnit = useLocalStorage<string>("cashu.activeUnit", "points");
+    const activeMintUrl = useLocalStorage<string>(
+      "cashu.activeMintUrl",
+      "https://ecash.trailscoffee.com"
+    );
     const addMintData = ref({
       url: "",
       nickname: "",
     });
-    const mints = useLocalStorage("cashu.mints", [] as Mint[]);
+    const mints = useLocalStorage("cashu.mints", [
+      {
+        url: "https://ecash.trailscoffee.com",
+        keys: [],
+        keysets: [],
+        nickname: "Trails Coffee",
+        errored: false,
+        motdDismissed: false,
+        multinutSelected: false,
+      } as Mint,
+    ]);
     const showAddMintDialog = ref(false);
     const addMintBlocking = ref(false);
     const showRemoveMintDialog = ref(false);
@@ -172,36 +185,105 @@ export const useMintsStore = defineStore("mints", {
       });
     },
     totalUnitBalance({ activeUnit }): number {
-      const proofsStore = useProofsStore();
-      const allUnitKeysets = this.mints
-        .map((m) => m.keysets)
-        .flat()
-        .filter((k) => k.unit === activeUnit);
-      const balance = proofsStore.proofs
-        .filter((p) => allUnitKeysets.map((k) => k.id).includes(p.id))
-        .filter((p) => !p.reserved)
-        .reduce((sum, p) => sum + p.amount, 0);
-      this.uiStoreGlobal.lastBalanceCached = balance;
-      return balance;
+      try {
+        const proofsStore = useProofsStore();
+
+        // Map "points" to "sat" if no points keysets exist
+        let unitToUse = activeUnit;
+        if (activeUnit === "points") {
+          const hasPointsKeysets = this.mints
+            .map((m) => m.keysets)
+            .flat()
+            .some((k) => k.unit === "points");
+          if (!hasPointsKeysets) {
+            unitToUse = "sat";
+          }
+        }
+
+        const allUnitKeysets = this.mints
+          .map((m) => m.keysets)
+          .flat()
+          .filter((k) => k.unit === unitToUse);
+        const balance = proofsStore.proofs
+          .filter((p) => allUnitKeysets.map((k) => k.id).includes(p.id))
+          .filter((p) => !p.reserved)
+          .reduce((sum, p) => sum + p.amount, 0);
+        this.uiStoreGlobal.lastBalanceCached = balance;
+        return balance;
+      } catch (error) {
+        console.error("Error in totalUnitBalance:", error);
+        return 0;
+      }
     },
-    activeBalance(): number {
-      return this.activeProofs
-        .flat()
-        .reduce((sum, el) => (sum += el.amount), 0);
+    activeBalance({ activeUnit }): number {
+      try {
+        // Map "points" to "sat" if no points keysets exist
+        let unitToUse = activeUnit;
+        if (activeUnit === "points") {
+          const hasPointsKeysets = this.mints
+            .map((m) => m.keysets)
+            .flat()
+            .some((k) => k.unit === "points");
+          if (!hasPointsKeysets) {
+            unitToUse = "sat";
+          }
+        }
+
+        // Filter proofs by the correct unit
+        const activeMint = this.mints.find((m) => m.url === this.activeMintUrl);
+        if (!activeMint) return 0;
+
+        const unitKeysets = activeMint.keysets.filter(
+          (k) => k.unit === unitToUse
+        );
+        const proofsStore = useProofsStore();
+        const unitProofs = proofsStore.proofs.filter(
+          (p) => unitKeysets.map((k) => k.id).includes(p.id) && !p.reserved
+        );
+
+        return unitProofs.reduce((sum, el) => (sum += el.amount), 0);
+      } catch (error) {
+        console.error("Error in activeBalance:", error);
+        return 0;
+      }
     },
     activeKeysets({ activeMintUrl, activeUnit }): MintKeyset[] {
+      // Map "points" to "sat" if no points keysets exist
+      let unitToUse = activeUnit;
+      if (activeUnit === "points") {
+        const hasPointsKeysets = this.mints
+          .map((m) => m.keysets)
+          .flat()
+          .some((k) => k.unit === "points");
+        if (!hasPointsKeysets) {
+          unitToUse = "sat";
+        }
+      }
+
       const unitKeysets = this.mints
         .find((m) => m.url === activeMintUrl)
-        ?.keysets?.filter((k) => k.unit === activeUnit);
+        ?.keysets?.filter((k) => k.unit === unitToUse);
       if (!unitKeysets) {
         return [];
       }
       return unitKeysets;
     },
     activeKeys({ activeMintUrl, activeUnit }): MintKeys[] {
+      // Map "points" to "sat" if no points keysets exist
+      let unitToUse = activeUnit;
+      if (activeUnit === "points") {
+        const hasPointsKeysets = this.mints
+          .map((m) => m.keysets)
+          .flat()
+          .some((k) => k.unit === "points");
+        if (!hasPointsKeysets) {
+          unitToUse = "sat";
+        }
+      }
+
       const unitKeys = this.mints
         .find((m) => m.url === activeMintUrl)
-        ?.keys?.filter((k) => k.unit === activeUnit);
+        ?.keys?.filter((k) => k.unit === unitToUse);
       if (!unitKeys) {
         return [];
       }
@@ -214,12 +296,8 @@ export const useMintsStore = defineStore("mints", {
       );
     },
     activeUnitLabel({ activeUnit }): string {
-      if (activeUnit == "sat") {
-        if (this.settingsStoreGlobal.bip177BitcoinSymbol) {
-          return "₿";
-        } else {
-          return "SAT";
-        }
+      if (activeUnit == "points") {
+        return "POINTS";
       } else if (activeUnit == "usd") {
         return "USD";
       } else if (activeUnit == "eur") {

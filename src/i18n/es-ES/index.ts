@@ -275,7 +275,7 @@ export default {
       connection: {
         copy_tooltip: "Copiar cadena de conexión",
         qr_tooltip: "Mostrar código QR",
-        allowance_label: "Límite restante (sat)",
+        allowance_label: "Límite restante (points)",
       },
       relays: {
         expand_label: "Haz clic para editar relays",

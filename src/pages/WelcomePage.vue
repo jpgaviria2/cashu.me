@@ -22,12 +22,6 @@
         <q-carousel-slide :name="1">
           <WelcomeSlide2 />
         </q-carousel-slide>
-        <q-carousel-slide :name="2">
-          <WelcomeSlide3 />
-        </q-carousel-slide>
-        <q-carousel-slide :name="3">
-          <WelcomeSlide4 />
-        </q-carousel-slide>
       </q-carousel>
 
       <div class="q-pa-md flex justify-between">
@@ -73,16 +67,12 @@ import { useWelcomeStore } from "src/stores/welcome";
 import { useStorageStore } from "src/stores/storage";
 import WelcomeSlide1 from "./welcome/WelcomeSlide1.vue";
 import WelcomeSlide2 from "./welcome/WelcomeSlide2.vue";
-import WelcomeSlide3 from "./welcome/WelcomeSlide3.vue";
-import WelcomeSlide4 from "./welcome/WelcomeSlide4.vue";
 
 export default {
   name: "WelcomePage",
   components: {
     WelcomeSlide1,
     WelcomeSlide2,
-    WelcomeSlide3,
-    WelcomeSlide4,
   },
   data() {
     return {

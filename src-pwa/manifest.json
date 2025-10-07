@@ -1,11 +1,11 @@
 {
-  "name": "Cashu.me",
-  "short_name": "Cashu.me",
-  "description": "A Cashu Ecash wallet for the web.",
+  "name": "Trails Coffee Rewards",
+  "short_name": "Trails Rewards",
+  "description": "Your Trails Coffee rewards and gift cards powered by ecash.",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#000000",
-  "theme_color": "#000000",
+  "background_color": "#8B4513",
+  "theme_color": "#8B4513",
   "protocol_handlers": [
     {
       "protocol": "web+cashu",

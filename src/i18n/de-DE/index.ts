@@ -261,7 +261,7 @@ export default {
       connection: {
         copy_tooltip: "Verbindungsstring kopieren",
         qr_tooltip: "QR-Code anzeigen",
-        allowance_label: "Restliches Guthaben (sat)",
+        allowance_label: "Restliches Guthaben (points)",
       },
       relays: {
         expand_label: "Klicken, um Relays zu bearbeiten",

@@ -127,10 +127,10 @@ export const useWalletStore = defineStore("wallet", {
           error: "",
         },
         invoice: {
-          sat: 0,
+          points: 0,
           memo: "",
           bolt11: "",
-        } as { sat: number; memo: string; bolt11: string } | null,
+        } as { points: number; memo: string; bolt11: string } | null,
         lnurlpay: {
           domain: "",
           callback: "",
@@ -862,7 +862,7 @@ export const useWalletStore = defineStore("wallet", {
           amount: -amount_paid,
         });
 
-        this.payInvoiceData.invoice = { sat: 0, memo: "", bolt11: "" };
+        this.payInvoiceData.invoice = { points: 0, memo: "", bolt11: "" };
         this.payInvoiceData.show = false;
         return data;
       } catch (error: any) {
@@ -1380,8 +1380,8 @@ export const useWalletStore = defineStore("wallet", {
         bolt11: invoice.paymentRequest,
         memo: "",
         msat: 0,
-        sat: 0,
-        fsat: 0,
+        points: 0,
+        fpoints: 0,
         hash: "",
         description: "",
         timestamp: 0,
@@ -1392,8 +1392,8 @@ export const useWalletStore = defineStore("wallet", {
         if (_.isObject(tag) && _.has(tag, "name")) {
           if (tag.name === "amount") {
             cleanInvoice.msat = parseInt(tag.value, 10);
-            cleanInvoice.sat = parseInt(tag.value, 10) / 1000;
-            cleanInvoice.fsat = cleanInvoice.sat;
+            cleanInvoice.points = parseInt(tag.value, 10) / 1000;
+            cleanInvoice.fpoints = cleanInvoice.points;
           } else if (tag.name === "payment_hash") {
             cleanInvoice.hash = tag.value;
           } else if (tag.name === "description") {
@@ -1558,9 +1558,9 @@ export const useWalletStore = defineStore("wallet", {
             );
             return;
           }
-          const satPrice = 1 / (priceUsd / 1e8);
+          const pointsPrice = 1 / (priceUsd / 1e8);
           const usdAmount = amount;
-          amount = Math.floor(usdAmount * satPrice);
+          amount = Math.floor(usdAmount * pointsPrice);
         }
         var { data } = await axios.get(
           `${this.payInvoiceData.lnurlpay.callback}?amount=${amount * 1000}`

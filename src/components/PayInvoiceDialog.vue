@@ -35,7 +35,7 @@
                 </i18n-t>
               </h6>
               <span
-                v-if="bitcoinPrice && activeUnit == 'sat'"
+                v-if="bitcoinPrice && activeUnit == 'points'"
                 class="q-ml-xs text-subtitle2 text-grey-6"
               >
                 ({{

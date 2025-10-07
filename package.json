@@ -1,9 +1,9 @@
 {
-  "name": "cashu",
+  "name": "trails-coffee-rewards",
   "version": "0.0.1",
-  "description": "Cashu.me Wallet",
-  "productName": "Cashu.me",
-  "author": "cashu.me",
+  "description": "Trails Coffee Rewards App",
+  "productName": "Trails Coffee Rewards",
+  "author": "Trails Coffee",
   "private": true,
   "scripts": {
     "dev": "quasar dev",

@@ -29,7 +29,10 @@
             }}</span>
             <span
               v-if="
-                tokenAmount && tokenUnit && tokenUnit == 'sat' && bitcoinPrice
+                tokenAmount &&
+                tokenUnit &&
+                tokenUnit == 'points' &&
+                bitcoinPrice
               "
               class="q-ml-xs text-subtitle2 text-grey-6"
             >

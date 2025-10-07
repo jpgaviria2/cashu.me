@@ -23,7 +23,9 @@
           <div class="col-10">
             <span class="text-h6">{{ $t("InvoiceDetailDialog.title") }}</span>
             <span
-              v-if="invoiceData.amount && bitcoinPrice && activeUnit == 'sat'"
+              v-if="
+                invoiceData.amount && bitcoinPrice && activeUnit == 'points'
+              "
               class="q-ml-xs text-subtitle2 text-grey-6"
             >
               ({{

@@ -5,7 +5,7 @@ export default {
     },
     actions: {
       add_mint: {
-        label: "Add mint",
+        label: "Add Coffee Shop",
       },
       cancel: {
         label: "Cancel",
@@ -26,13 +26,13 @@ export default {
         label: "Paste",
       },
       receive: {
-        label: "Receive",
+        label: "Receive Points",
       },
       scan: {
         label: "Scan",
       },
       send: {
-        label: "Send",
+        label: "Send Points",
       },
       swap: {
         label: "Swap",
@@ -43,7 +43,7 @@ export default {
     },
     inputs: {
       mint_url: {
-        label: "Mint URL",
+        label: "Coffee Shop URL",
       },
     },
   },
@@ -193,6 +193,7 @@ export default {
       privacy: "PRIVACY",
       experimental: "EXPERIMENTAL",
       appearance: "APPEARANCE",
+      terms_legal: "TERMS & LEGAL",
     },
     backup_restore: {
       backup_seed: {
@@ -271,7 +272,7 @@ export default {
       connection: {
         copy_tooltip: "Copy connection string",
         qr_tooltip: "Show QR code",
-        allowance_label: "Allowance left (sat)",
+        allowance_label: "Allowance left (points)",
       },
     },
     hardware_features: {
@@ -293,7 +294,7 @@ export default {
         quick_access: {
           toggle: "Quick access to NFC",
           description:
-            "Quickly scan NFC cards in the Receive Ecash menu. This option adds an NFC button the Receive Ecash menu.",
+            "Quickly scan NFC cards in the Receive Points menu. This option adds an NFC button the Receive Points menu.",
         },
       },
     },
@@ -358,12 +359,12 @@ export default {
         toggle: "Receive swaps",
         badge: "Beta",
         description:
-          "Option to swap received Ecash to your active mint in the Receive Ecash dialog.",
+          "Option to swap received Points to your active mint in the Receive Points dialog.",
       },
       auto_paste: {
-        toggle: "Paste Ecash automatically",
+        toggle: "Paste Points automatically",
         description:
-          "Automatically paste ecash in your clipboard when you press Receive, then Ecash, then Paste. Automatic pasting can cause UI glitches in iOS, turn it off if you experience issues.",
+          "Automatically paste points in your clipboard when you press Receive, then Points, then Paste. Automatic pasting can cause UI glitches in iOS, turn it off if you experience issues.",
       },
       auditor: {
         toggle: "Enable auditor",
@@ -414,7 +415,7 @@ export default {
       },
       bip177: {
         title: "Bitcoin symbol",
-        description: "Use ₿ symbol instead of sats.",
+        description: "Use ₿ symbol instead of points.",
         toggle: "Use ₿ symbol",
       },
     },
@@ -478,6 +479,13 @@ export default {
       },
     },
   },
+  terms_legal: {
+    terms: {
+      title: "Terms of Service",
+      description: "View the terms of service for Trails Coffee Rewards.",
+      button: "View Terms",
+    },
+  },
   NoMintWarnBanner: {
     title: "Join a mint",
     subtitle:
@@ -487,7 +495,7 @@ export default {
         label: "@:global.actions.add_mint.label",
       },
       receive: {
-        label: "Receive Ecash",
+        label: "Receive Points",
       },
     },
   },
@@ -502,18 +510,18 @@ export default {
     },
     tabs: {
       history: {
-        label: "History",
+        label: "Rewards History",
       },
       invoices: {
         label: "Invoices",
       },
       mints: {
-        label: "Mints",
+        label: "Trails Coffee",
       },
     },
     install: {
       text: "Install",
-      tooltip: "Install Cashu",
+      tooltip: "Install Trails Coffee Rewards",
     },
   },
   AlreadyRunning: {
@@ -536,17 +544,17 @@ export default {
   },
   BalanceView: {
     mintUrl: {
-      label: "Mint",
+      label: "Trails Coffee",
     },
     mintBalance: {
-      label: "Balance",
+      label: "Rewards Balance",
     },
     mintError: {
-      label: "Mint error",
+      label: "Connection error",
     },
     pending: {
-      label: "Pending",
-      tooltip: "Check all pending tokens",
+      label: "Pending Rewards",
+      tooltip: "Check all pending rewards",
     },
   },
   WelcomePage: {
@@ -560,27 +568,27 @@ export default {
     },
   },
   WelcomeSlide1: {
-    title: "Welcome to Cashu",
-    text: "Cashu.me is a free and open-source Bitcoin wallet that uses ecash to keep your funds secure and private.",
+    title: "Welcome to Trails Coffee Rewards",
+    text: "Your personal rewards account for Trails Coffee. Receive and manage your coffee rewards and gift cards securely.",
     actions: {
       more: {
-        label: "Click to learn more",
+        label: "Learn about rewards",
       },
     },
     p1: {
-      text: "Cashu is a free and open-source ecash protocol for Bitcoin. You can learn more about it at { link }.",
+      text: "This app uses ecash technology to securely manage your Trails Coffee rewards and gift cards. Your rewards are private and secure.",
       link: {
-        text: "cashu.space",
+        text: "ecash.space",
       },
     },
     p2: {
-      text: "This wallet is not affiliated with any mint. To use this wallet, you need to connect to one or more Cashu mints that you trust.",
+      text: "This app is connected to Trails Coffee's reward system. You can receive rewards from Trails Coffee and share them with friends.",
     },
     p3: {
-      text: "This wallet stores ecash that only you have access to. If you delete your browser data without a seed phrase backup, you will lose your tokens.",
+      text: "Your rewards are stored securely on your device. If you delete your browser data without a backup, you will lose your rewards.",
     },
     p4: {
-      text: "This wallet is in beta. We hold no responsibility for people losing access to funds. Use at your own risk! This code is open-source and licensed under the MIT license.",
+      text: "This app is in beta. We hold no responsibility for people losing access to rewards. Use at your own risk!",
     },
   },
   WelcomeSlide2: {
@@ -730,6 +738,15 @@ export default {
     },
   },
   MintSettings: {
+    advanced: {
+      title: "Advanced Features",
+      actions: {
+        show_advanced: {
+          label: "Show Advanced Features",
+          description: "Add mints, discover new mints, and swap between mints",
+        },
+      },
+    },
     add: {
       title: "Add mint",
       description:
@@ -844,8 +861,8 @@ export default {
   SendDialog: {
     title: "Send",
     actions: {
-      ecash: {
-        label: "Ecash",
+      points: {
+        label: "Points",
         error_no_mints: "No mints available",
       },
       lightning: {
@@ -856,7 +873,7 @@ export default {
   },
   SendTokenDialog: {
     title: "Send { value }",
-    title_ecash_text: "Ecash",
+    title_ecash_text: "Points",
     badge_offline_text: "Offline",
     inputs: {
       amount: {
@@ -911,8 +928,8 @@ export default {
   ReceiveDialog: {
     title: "Receive",
     actions: {
-      ecash: {
-        label: "Ecash",
+      points: {
+        label: "Points",
         error_no_mints: "No mints available",
       },
       lightning: {
@@ -923,7 +940,7 @@ export default {
     },
   },
   ReceiveEcashDrawer: {
-    title: "Receive Ecash",
+    title: "Receive Points",
     actions: {
       paste: {
         label: "@:global.actions.paste.label",
@@ -945,7 +962,7 @@ export default {
   },
   ReceiveTokenDialog: {
     title: "Receive { value }",
-    title_ecash_text: "Ecash",
+    title_ecash_text: "Points",
     inputs: {
       tokens_base64: {
         label: "Paste Cashu token",
@@ -988,8 +1005,8 @@ export default {
       later: {
         label: "Later",
         tooltip_text: "Add to history to receive later",
-        already_in_history_success_text: "Ecash already in History",
-        added_to_history_success_text: "Ecash added to History",
+        already_in_history_success_text: "Points already in History",
+        added_to_history_success_text: "Points added to History",
       },
       nfc: {
         label: "NFC",
@@ -1130,7 +1147,7 @@ export default {
   HistoryTable: {
     empty_text: "No history yet",
     row: {
-      type_label: "Ecash",
+      type_label: "Points",
       date_label: "{ value } ago",
     },
     actions: {
