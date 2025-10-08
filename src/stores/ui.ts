@@ -78,6 +78,11 @@ export const useUiStore = defineStore("ui", {
         new Intl.NumberFormat(navigator.language).format(value) + " points"
       );
     },
+    formatSatAsPoints: function (value: number) {
+      return (
+        new Intl.NumberFormat(navigator.language).format(value) + " points"
+      );
+    },
     fromMsat: function (value: number) {
       return new Intl.NumberFormat(navigator.language).format(value) + " msat";
     },
@@ -94,6 +99,7 @@ export const useUiStore = defineStore("ui", {
           return "****";
         }
         if (currency == "points") return this.formatPoints(value);
+        if (currency == "sat") return this.formatSatAsPoints(value);
         if (currency == "msat") return this.fromMsat(value);
         if (currency == "usd") value = value / 100;
         if (currency == "eur") value = value / 100;

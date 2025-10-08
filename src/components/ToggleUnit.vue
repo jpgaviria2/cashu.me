@@ -35,9 +35,9 @@ export default defineComponent({
   computed: {
     ...mapState(useMintsStore, ["activeUnit", "activeUnitLabel"]),
     activeUnitLabelAdopted: function () {
-      // we want to show BTC instead of POINTS
-      if (this.activeUnit === "points") {
-        return "BTC";
+      // Show Points when unit is sat
+      if (this.activeUnit === "sat") {
+        return "Points";
       } else {
         return this.activeUnitLabel;
       }

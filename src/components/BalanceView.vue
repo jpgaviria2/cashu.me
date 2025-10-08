@@ -58,7 +58,7 @@
                 <strong>
                   <AnimatedNumber
                     :value="getTotalBalance"
-                    :format="(val) => formatCurrency(val, activeUnit)"
+                    :format="(val) => formatCurrencyDisplay(val, activeUnit)"
                     class="q-my-none q-py-none cursor-pointer"
                   />
                 </strong>
@@ -120,7 +120,7 @@
         @click="checkPendingTokens()"
         ><q-icon name="history" size="1rem" class="q-mx-xs" />
         {{ $t("BalanceView.pending.label") }}:
-        {{ formatCurrency(pendingBalance, this.activeUnit) }}
+        {{ formatCurrencyDisplay(pendingBalance, this.activeUnit) }}
         <q-tooltip>{{ $t("BalanceView.pending.tooltip") }}</q-tooltip>
       </q-btn>
     </div>
@@ -171,7 +171,6 @@ export default defineComponent({
       "currentCurrencyPrice",
     ]),
     ...mapState(useSettingsStore, ["bitcoinPriceCurrency"]),
-    ...mapWritableState(useMintsStore, ["activeUnit"]),
     ...mapWritableState(useUiStore, ["hideBalance", "lastBalanceCached"]),
     pendingBalance: function () {
       return -this.historyTokens
@@ -187,16 +186,6 @@ export default defineComponent({
           value: key,
         })
       );
-
-      // Ensure "points" is always available, even if mint only has "sat"
-      const hasPoints = mintBalances.some((b) => b.value === "points");
-      if (!hasPoints) {
-        // Add points option that maps to sat balance
-        mintBalances.unshift({
-          label: "points",
-          value: "points",
-        });
-      }
 
       return mintBalances;
     },
@@ -236,14 +225,24 @@ export default defineComponent({
   methods: {
     ...mapActions(useWalletStore, ["checkPendingTokens"]),
     ...mapActions(usePriceStore, ["fetchBitcoinPrice"]),
+    toggleHideBalance() {
+      this.hideBalance = !this.hideBalance;
+    },
     toggleUnit: function () {
       const units = this.activeMint().units;
       this.activeUnit =
         units[(units.indexOf(this.activeUnit) + 1) % units.length];
       return this.activeUnit;
     },
-    toggleHideBalance() {
-      this.hideBalance = !this.hideBalance;
+    formatCurrencyDisplay: function (value: number, currency: string) {
+      // If currency is 'sat', display as 'points'
+      if (currency === "sat") {
+        return (
+          new Intl.NumberFormat(navigator.language).format(value) + " points"
+        );
+      }
+      // For other currencies, use the normal formatCurrency function
+      return this.formatCurrency(value, currency);
     },
   },
 });

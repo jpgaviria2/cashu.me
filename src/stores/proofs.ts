@@ -35,19 +35,8 @@ export const useProofsStore = defineStore("proofs", {
         return;
       }
 
-      // Map "points" to "sat" if no points keysets exist
-      let unitToUse = mintStore.activeUnit;
-      if (mintStore.activeUnit === "points") {
-        const hasPointsKeysets = currentMint.keysets?.some(
-          (k) => k.unit === "points"
-        );
-        if (!hasPointsKeysets) {
-          unitToUse = "sat";
-        }
-      }
-
       const unitKeysets = currentMint?.keysets?.filter(
-        (k) => k.unit === unitToUse
+        (k) => k.unit === mintStore.activeUnit
       );
       if (!unitKeysets || unitKeysets.length === 0) {
         mintStore.activeProofs = [];

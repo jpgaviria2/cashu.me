@@ -105,7 +105,7 @@ export const useMintsStore = defineStore("mints", {
   state: () => {
     const t = i18n.global.t;
     const activeProofs = ref<WalletProof[]>([]);
-    const activeUnit = useLocalStorage<string>("cashu.activeUnit", "points");
+    const activeUnit = useLocalStorage<string>("cashu.activeUnit", "sat");
     const activeMintUrl = useLocalStorage<string>(
       "cashu.activeMintUrl",
       "https://ecash.trailscoffee.com"
@@ -188,22 +188,10 @@ export const useMintsStore = defineStore("mints", {
       try {
         const proofsStore = useProofsStore();
 
-        // Map "points" to "sat" if no points keysets exist
-        let unitToUse = activeUnit;
-        if (activeUnit === "points") {
-          const hasPointsKeysets = this.mints
-            .map((m) => m.keysets)
-            .flat()
-            .some((k) => k.unit === "points");
-          if (!hasPointsKeysets) {
-            unitToUse = "sat";
-          }
-        }
-
         const allUnitKeysets = this.mints
           .map((m) => m.keysets)
           .flat()
-          .filter((k) => k.unit === unitToUse);
+          .filter((k) => k.unit === activeUnit);
         const balance = proofsStore.proofs
           .filter((p) => allUnitKeysets.map((k) => k.id).includes(p.id))
           .filter((p) => !p.reserved)
@@ -217,24 +205,12 @@ export const useMintsStore = defineStore("mints", {
     },
     activeBalance({ activeUnit }): number {
       try {
-        // Map "points" to "sat" if no points keysets exist
-        let unitToUse = activeUnit;
-        if (activeUnit === "points") {
-          const hasPointsKeysets = this.mints
-            .map((m) => m.keysets)
-            .flat()
-            .some((k) => k.unit === "points");
-          if (!hasPointsKeysets) {
-            unitToUse = "sat";
-          }
-        }
-
         // Filter proofs by the correct unit
         const activeMint = this.mints.find((m) => m.url === this.activeMintUrl);
         if (!activeMint) return 0;
 
         const unitKeysets = activeMint.keysets.filter(
-          (k) => k.unit === unitToUse
+          (k) => k.unit === activeUnit
         );
         const proofsStore = useProofsStore();
         const unitProofs = proofsStore.proofs.filter(
@@ -248,42 +224,18 @@ export const useMintsStore = defineStore("mints", {
       }
     },
     activeKeysets({ activeMintUrl, activeUnit }): MintKeyset[] {
-      // Map "points" to "sat" if no points keysets exist
-      let unitToUse = activeUnit;
-      if (activeUnit === "points") {
-        const hasPointsKeysets = this.mints
-          .map((m) => m.keysets)
-          .flat()
-          .some((k) => k.unit === "points");
-        if (!hasPointsKeysets) {
-          unitToUse = "sat";
-        }
-      }
-
       const unitKeysets = this.mints
         .find((m) => m.url === activeMintUrl)
-        ?.keysets?.filter((k) => k.unit === unitToUse);
+        ?.keysets?.filter((k) => k.unit === activeUnit);
       if (!unitKeysets) {
         return [];
       }
       return unitKeysets;
     },
     activeKeys({ activeMintUrl, activeUnit }): MintKeys[] {
-      // Map "points" to "sat" if no points keysets exist
-      let unitToUse = activeUnit;
-      if (activeUnit === "points") {
-        const hasPointsKeysets = this.mints
-          .map((m) => m.keysets)
-          .flat()
-          .some((k) => k.unit === "points");
-        if (!hasPointsKeysets) {
-          unitToUse = "sat";
-        }
-      }
-
       const unitKeys = this.mints
         .find((m) => m.url === activeMintUrl)
-        ?.keys?.filter((k) => k.unit === unitToUse);
+        ?.keys?.filter((k) => k.unit === activeUnit);
       if (!unitKeys) {
         return [];
       }

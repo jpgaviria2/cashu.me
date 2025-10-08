@@ -221,7 +221,7 @@ window.windowMixin = {
         this.$q.localStorage.getItem("cashu.theme")
       );
     } else {
-      this.changeColor("monochrome");
+      this.changeColor("mint");
     }
 
     const language = this.$q.localStorage.getItem("cashu.language");
