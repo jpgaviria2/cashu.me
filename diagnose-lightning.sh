@@ -256,3 +256,5 @@ echo "  - Test manually: curl $LNURL_URL"
 echo ""
 echo "================================================"
 
+
+

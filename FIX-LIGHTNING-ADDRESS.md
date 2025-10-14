@@ -518,3 +518,5 @@ When everything is working:
 
 **Most likely fix needed**: Configure Nginx on root domain (Step 3) and ensure Lightning addresses use `@trailscoffee.com` not `@npubcash.trailscoffee.com` (Step 1).
 
+
+

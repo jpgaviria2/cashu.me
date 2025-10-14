@@ -218,3 +218,5 @@ Result: Payment succeeds!
 
 **After all fixes**, Lightning addresses will work correctly with Strike and other wallets! ⚡
 
+
+

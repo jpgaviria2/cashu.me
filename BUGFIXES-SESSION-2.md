@@ -106,3 +106,5 @@ GET https://localhost:8080/icons/128x128.png 404 (Not Found)
 All critical bugs have been fixed! The app now loads properly and the onboarding flow works (except for the server registration which requires deployment). The remaining issues are either cosmetic (icons) or require external setup (npubcash server).
 
 
+
+

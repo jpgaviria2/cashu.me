@@ -132,3 +132,5 @@ echo "   - Full Guide: $INSTALL_DIR/README-TRAILS.md"
 echo ""
 echo "🎉 Ready to revolutionize coffee shop loyalty with Bitcoin Lightning! ☕⚡"
 
+
+
