@@ -86,9 +86,8 @@ type KeysetCounter = {
   counter: number;
 };
 
-const receiveStore = useReceiveTokensStore();
-const tokenStore = useTokensStore();
-const proofsStore = useProofsStore();
+// Removed module-level store calls to avoid Pinia initialization errors
+// These stores are now called directly inside actions where needed
 
 export const useWalletStore = defineStore("wallet", {
   state: () => {
@@ -469,6 +468,9 @@ export const useWalletStore = defineStore("wallet", {
       const uIStore = useUiStore();
       const mintStore = useMintsStore();
       const p2pkStore = useP2PKStore();
+      const receiveStore = useReceiveTokensStore();
+      const tokenStore = useTokensStore();
+      const proofsStore = useProofsStore();
 
       receiveStore.showReceiveTokens = false;
 

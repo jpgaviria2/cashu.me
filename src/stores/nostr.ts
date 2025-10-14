@@ -84,7 +84,7 @@ export const useNostrStore = defineStore("nostr", {
       ""
     ),
     seedSigner: {} as NDKPrivateKeySigner,
-    seedSignerPrivateKeyNsec: "",
+    // seedSignerPrivateKeyNsec moved to getters to avoid conflict
     privateKeySigner: {} as NDKPrivateKeySigner,
     signer: {} as NDKSigner,
     mintRecommendations: useLocalStorage<MintRecommendation[]>(

@@ -38,6 +38,13 @@ const routes = [
     ],
   },
   {
+    path: "/onboarding",
+    component: () => import("layouts/BlankLayout.vue"),
+    children: [
+      { path: "", component: () => import("src/pages/OnboardingPage.vue") },
+    ],
+  },
+  {
     path: "/terms",
     component: () => import("layouts/FullscreenLayout.vue"),
     children: [

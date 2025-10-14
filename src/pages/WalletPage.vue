@@ -3,6 +3,8 @@
     <div class="row q-col-gutter-y-md justify-center q-pt-sm q-pb-md">
       <div class="col-12 col-sm-11 col-md-8 text-center q-gutter-y-md">
         <ActivityOrb />
+        <!-- Trails Coffee Identity Card -->
+        <TrailsIdentityCard v-if="identityStore.profile" class="q-mb-md" />
         <NoMintWarnBanner v-if="mints.length == 0" />
         <BalanceView v-else :set-tab="setTab" />
         <div
@@ -289,10 +291,12 @@ import QrcodeReader from "components/QrcodeReader.vue";
 import iOSPWAPrompt from "components/iOSPWAPrompt.vue";
 import AndroidPWAPrompt from "components/AndroidPWAPrompt.vue";
 import ActivityOrb from "components/ActivityOrb.vue";
+import TrailsIdentityCard from "components/TrailsIdentityCard.vue";
 
 // pinia stores
 import { mapActions, mapState, mapWritableState } from "pinia";
 import { useMintsStore } from "src/stores/mints";
+import { useTrailsIdentityStore } from "src/stores/trailsIdentity";
 import { useSendTokensStore } from "src/stores/sendTokensStore";
 import { useReceiveTokensStore } from "src/stores/receiveTokensStore";
 import { useWorkersStore } from "src/stores/workers";
@@ -343,6 +347,7 @@ export default {
     AndroidPWAPrompt,
     ScanIcon,
     ActivityOrb,
+    TrailsIdentityCard,
   },
   data: function () {
     return {
@@ -380,6 +385,9 @@ export default {
     };
   },
   computed: {
+    identityStore() {
+      return useTrailsIdentityStore();
+    },
     ...mapState(useUiStore, ["tickerShort"]),
     ...mapWritableState(useUiStore, [
       "showInvoiceDetails",
