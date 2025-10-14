@@ -146,17 +146,23 @@ export const useTrailsIdentityStore = defineStore("trailsIdentity", {
         );
 
         if (response.data.success) {
+          // Fix Lightning address to use root domain (not subdomain)
+          let lightningAddress = response.data.lightningAddress;
+          if (lightningAddress && lightningAddress.includes('@npubcash.trailscoffee.com')) {
+            lightningAddress = lightningAddress.replace('@npubcash.trailscoffee.com', '@trailscoffee.com');
+          }
+          
           this.profile = {
             ...this.profile,
             npub: npub,
-            lightningAddress: response.data.lightningAddress,
-            nip05: response.data.nip05,
+            lightningAddress: lightningAddress || `${this.shortNpub}@trailscoffee.com`,
+            nip05: response.data.nip05 || `${this.shortNpub}@trailscoffee.com`,
             registered: true,
             registeredAt: Date.now(),
           } as TrailsIdentityProfile;
 
           notifySuccess(
-            `Lightning address created: ${response.data.lightningAddress}`
+            `Lightning address created: ${lightningAddress}`
           );
           return true;
         } else {
