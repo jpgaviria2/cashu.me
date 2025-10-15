@@ -1,14 +1,14 @@
 <template>
   <div class="wallet-container">
-    <div class="row q-col-gutter-y-md justify-center q-pt-sm q-pb-md">
-      <div class="col-12 col-sm-11 col-md-8 text-center q-gutter-y-md">
+    <div class="row q-col-gutter-y-sm justify-center q-pt-sm q-pb-sm">
+      <div class="col-12 col-sm-11 col-md-8 text-center q-gutter-y-sm">
         <ActivityOrb />
         <NoMintWarnBanner v-if="mints.length == 0" />
         <BalanceView v-else :set-tab="setTab" />
         <div
-          class="row items-center justify-center no-wrap q-mb-none q-mx-none q-px-none q-pt-lg q-pb-md position-relative"
+          class="row items-center justify-center no-wrap q-mb-sm q-mx-none q-px-none q-pt-sm q-pb-sm position-relative"
         >
-          <div class="col-6 q-mb-md flex justify-center items-center">
+          <div class="col-6 q-mb-sm flex justify-center items-center">
             <q-btn
               rounded
               dense
@@ -32,7 +32,7 @@
           </transition>
 
           <!-- button to showSendDialog -->
-          <div class="col-6 q-mb-md flex justify-center items-center">
+          <div class="col-6 q-mb-sm flex justify-center items-center">
             <q-btn
               rounded
               dense
@@ -101,8 +101,8 @@
           </q-tab-panels>
         </q-expansion-item>
 
-        <div style="margin-bottom: 0rem">
-          <div class="row q-pt-sm">
+        <div style="margin-bottom: 0rem; margin-top: 0rem">
+          <div class="row q-pt-none">
             <div class="col-12 q-pt-xs">
               <q-btn
                 class="q-mx-xs q-px-sm q-my-sm"
@@ -249,7 +249,7 @@
 /* Footer positioning */
 .footer-section {
   margin-top: auto;
-  padding: 2rem 0 1rem 0;
+  padding: 1rem 0 1.5rem 0;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 

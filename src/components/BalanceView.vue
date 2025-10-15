@@ -1,8 +1,8 @@
 <template>
   <!-- <q-card class="q-my-md q-py-sm">
     <q-card-section class="q-mt-sm q-py-xs"> -->
-  <div class="q-pt-xl q-pb-md">
-    <div class="row justify-center q-pb-lg" style="height: 80px">
+  <div class="q-pt-sm q-pb-sm">
+    <div class="row justify-center q-pb-sm" style="height: 60px">
       <div v-if="globalMutexLock">
         <transition
           appear
@@ -10,7 +10,7 @@
           leave-active-class="animated fadeOut"
         >
           <q-spinner-hourglass
-            class="q-mt-lg q-mb-none"
+            class="q-mt-sm q-mb-none"
             size="lg"
             color="primary"
           />
@@ -22,7 +22,7 @@
           enter-active-class="animated pulse"
           leave-active-class="animated fadeOut"
         >
-          <ToggleUnit class="q-mt-lg q-mb-none" />
+          <ToggleUnit class="q-mt-sm q-mb-none" />
         </transition>
       </div>
     </div>
@@ -38,9 +38,9 @@
         transition-next="jump-up"
         swipeable
         animated
-        :height="$q.screen.width < 390 ? '130px' : '80px'"
+        :height="$q.screen.width < 390 ? '100px' : '70px'"
         control-color="primary"
-        class="bg-transparent rounded-borders q-mb-xl q-mt-xl text-primary"
+        class="bg-transparent rounded-borders q-mb-sm q-mt-sm text-primary"
       >
         <!-- make a q-carousel-slide with v-for for all possible units -->
         <q-carousel-slide
