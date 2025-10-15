@@ -158,10 +158,34 @@
         </q-item>
         <q-item v-if="npcEnabled">
           <div class="row">
+            <div class="col-12 q-mb-sm">
+              <q-item-label caption class="text-weight-medium">Domain:</q-item-label>
+              <q-input
+                outlined
+                v-model="npcDomain"
+                dense
+                rounded
+                placeholder="trailscoffee.com"
+                @blur="updateNPCConnection"
+              >
+                <template v-slot:prepend>
+                  <q-icon name="domain" color="primary" />
+                </template>
+              </q-input>
+            </div>
             <div class="col-12">
               <q-input outlined v-model="npcAddress" dense rounded readonly>
                 <template v-slot:append>
                   <q-spinner-hourglass size="sm" v-if="npcLoading" />
+                  <q-icon
+                    name="qr_code"
+                    @click="showLightningQR = true"
+                    size="xs"
+                    color="grey"
+                    class="q-mr-sm cursor-pointer"
+                  >
+                    <q-tooltip>Show QR code for Lightning address</q-tooltip>
+                  </q-icon>
                   <q-icon
                     name="content_copy"
                     @click="copyText(npcAddress)"
@@ -1875,12 +1899,45 @@
       </q-card-actions>
     </q-card>
   </q-dialog>
+
+  <!-- LIGHTNING ADDRESS QR CODE DIALOG -->
+  <q-dialog v-model="showLightningQR">
+    <q-card style="min-width: 300px">
+      <q-card-section class="row items-center q-pb-none">
+        <div class="text-h6">Lightning Address QR Code</div>
+        <q-space />
+        <q-btn icon="close" flat round dense v-close-popup />
+      </q-card-section>
+      <q-card-section class="q-pt-none">
+        <div class="text-center">
+          <div class="text-subtitle2 q-mb-md">
+            Scan to send to your Lightning address
+          </div>
+          <div class="q-mb-md">
+            <vue-qrcode
+              :value="npcAddress"
+              :options="{ width: 200 }"
+              class="rounded-borders"
+            />
+          </div>
+          <div class="text-caption text-grey-6">
+            {{ npcAddress }}
+          </div>
+        </div>
+      </q-card-section>
+      <q-card-actions align="right">
+        <q-btn flat label="Copy Address" color="primary" @click="copyText(npcAddress)" />
+        <q-btn flat label="Close" color="primary" v-close-popup />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
 </template>
 <script lang="ts">
 import { defineComponent } from "vue";
 import P2PKDialog from "./P2PKDialog.vue";
 import NWCDialog from "./NWCDialog.vue";
 import ChooseMint from "./ChooseMint.vue";
+import VueQrcode from "@chenfengyuan/vue-qrcode";
 
 import { getShortUrl } from "src/js/wallet-helpers";
 import { mapActions, mapState, mapWritableState } from "pinia";
@@ -1913,6 +1970,7 @@ export default defineComponent({
     P2PKDialog,
     NWCDialog,
     ChooseMint,
+    VueQrcode,
   },
   props: {},
   data: function () {
@@ -1977,6 +2035,7 @@ export default defineComponent({
       confirmMnemonic: false,
       confirmNuke: false,
       showTermsDialog: false,
+      showLightningQR: false,
       nip46Token: "",
       nip07SignerAvailable: false,
       newRelay: "",
@@ -2035,6 +2094,7 @@ export default defineComponent({
     ...mapWritableState(useNPCStore, [
       "npcAddress",
       "npcEnabled",
+      "npcDomain",
       "automaticClaim",
     ]),
     ...mapWritableState(useWalletStore, ["keysetCounters"]),
@@ -2158,6 +2218,11 @@ export default defineComponent({
       this.newMnemonic();
       await this.initSigner();
       await this.generateNPCConnection();
+    },
+    updateNPCConnection: async function () {
+      if (this.npcEnabled) {
+        await this.generateNPCConnection();
+      }
     },
     shortUrl: function (url) {
       return getShortUrl(url);

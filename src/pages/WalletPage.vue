@@ -444,7 +444,7 @@ export default {
       "setProofs",
       "getKeysForKeyset",
     ]),
-    ...mapActions(useWorkersStore, ["clearAllWorkers", "invoiceCheckWorker"]),
+    ...mapActions(useWorkersStore, ["clearAllWorkers", "invoiceCheckWorker", "lightningAddressCheckWorker"]),
     ...mapActions(useTokensStore, ["setTokenPaid"]),
     ...mapActions(useWalletStore, [
       "setInvoicePaid",
@@ -674,6 +674,8 @@ export default {
     this.claimAllTokens();
     this.generateNPCV2Connection();
     this.getLatestQuotes();
+    // Start Lightning address check worker
+    this.lightningAddressCheckWorker();
     // Ensure wallet action buttons have equal width
     this.$nextTick(this.equalizeButtonWidths);
     // Add window resize listener to handle responsive layouts

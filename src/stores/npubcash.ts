@@ -52,13 +52,13 @@ const NIP98Kind = 27235;
 
 export const useNPCStore = defineStore("npc", {
   state: () => ({
-    npcEnabled: useLocalStorage<boolean>("cashu.npc.enabled", false),
+    npcEnabled: useLocalStorage<boolean>("cashu.npc.enabled", true),
     npcLastCheck: useLocalStorage<number>("cashu.npc.lastCheck", null),
     automaticClaim: useLocalStorage<boolean>("cashu.npc.automaticClaim", true),
     // npcConnections: useLocalStorage<NPCConnection[]>("cashu.npc.connections", []),
     npcAddress: useLocalStorage<string>("cashu.npc.address", ""),
-    npcDomain: useLocalStorage<string>("cashu.npc.domain", "npub.cash"),
-    baseURL: useLocalStorage<string>("cashu.npc.baseURL", "https://npub.cash"),
+    npcDomain: useLocalStorage<string>("cashu.npc.domain", "trailscoffee.com"),
+    baseURL: useLocalStorage<string>("cashu.npc.baseURL", "https://npubcash.trailscoffee.com"),
     npcLoading: false,
     // ndk: new NDK(),
     // signer: {} as NDKPrivateKeySigner,
@@ -76,7 +76,14 @@ export const useNPCStore = defineStore("npc", {
         nip19.npubEncode(walletPublicKeyHex) + "@" + this.npcDomain
       );
       console.log("npub:", nip19.npubEncode(walletPublicKeyHex));
-      this.baseURL = `https://${this.npcDomain}`;
+
+      // Set baseURL for API calls - use npubcash subdomain if domain is trailscoffee.com
+      if (this.npcDomain === "trailscoffee.com") {
+        this.baseURL = "https://npubcash.trailscoffee.com";
+      } else {
+        this.baseURL = `https://${this.npcDomain}`;
+      }
+
       const previousAddress = this.npcAddress;
       this.npcAddress =
         nip19.npubEncode(walletPublicKeyHex) + "@" + this.npcDomain;
