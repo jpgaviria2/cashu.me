@@ -130,6 +130,49 @@ class BluetoothEcashPlugin : Plugin() {
     }
 
     /**
+     * Set the Bluetooth nickname (how you appear to nearby peers)
+     * 
+     * @param nickname Display name for Bluetooth mesh (3-32 characters)
+     */
+    @PluginMethod
+    fun setNickname(call: PluginCall) {
+        try {
+            val nickname = call.getString("nickname")
+            if (nickname == null || nickname.isEmpty()) {
+                call.reject("Nickname is required")
+                return
+            }
+
+            bluetoothService?.setNickname(nickname)
+            
+            val ret = JSObject()
+            ret.put("nickname", nickname)
+            call.resolve(ret)
+            Log.i(TAG, "Nickname set to: $nickname")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to set nickname", e)
+            call.reject("Failed to set nickname: ${e.message}")
+        }
+    }
+
+    /**
+     * Get the current Bluetooth nickname
+     */
+    @PluginMethod
+    fun getNickname(call: PluginCall) {
+        try {
+            val nickname = bluetoothService?.getNickname() ?: "Bitpoints User"
+            
+            val ret = JSObject()
+            ret.put("nickname", nickname)
+            call.resolve(ret)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to get nickname", e)
+            call.reject("Failed to get nickname: ${e.message}")
+        }
+    }
+
+    /**
      * Check if Bluetooth is enabled on the device
      */
     @PluginMethod

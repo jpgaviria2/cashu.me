@@ -127,8 +127,11 @@
     <q-card-section class="q-pt-sm">
       <div class="text-caption text-grey-6">
         <q-icon name="info" size="xs" class="q-mr-xs" />
-        <span v-if="isDesktop">
-          Desktop Bluetooth: Requires Chrome or Edge browser
+        <span v-if="isDesktop && !bluetoothStore.isWebBluetoothAvailable">
+          ⚠️ Web Bluetooth not available. Please use <strong>Chrome</strong> or <strong>Edge</strong> browser.
+        </span>
+        <span v-else-if="isDesktop">
+          💡 Click "Enable" to connect to a nearby Bluetooth device. The browser will show a device picker.
         </span>
         <span v-else>
           Bluetooth mesh enables offline token transfers

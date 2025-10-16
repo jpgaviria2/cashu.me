@@ -71,6 +71,19 @@ export interface BluetoothEcashPlugin {
   stopService(): Promise<void>;
 
   /**
+   * Set the Bluetooth nickname (how you appear to nearby peers)
+   * Requires service restart to take effect
+   * 
+   * @param options Object containing nickname string (3-32 characters)
+   */
+  setNickname(options: { nickname: string }): Promise<{ nickname: string }>;
+
+  /**
+   * Get the current Bluetooth nickname
+   */
+  getNickname(): Promise<{ nickname: string }>;
+
+  /**
    * Send ecash token to nearby peer(s)
    *
    * @param options Token details and optional target peer

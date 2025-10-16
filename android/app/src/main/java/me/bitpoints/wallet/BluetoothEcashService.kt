@@ -38,6 +38,9 @@ class BluetoothEcashService(private val context: Context) {
     private val pendingTokens = ConcurrentHashMap<String, EcashMessage>()
     private val receivedTokens = ConcurrentHashMap<String, EcashMessage>()
 
+    // User configurable nickname
+    private var myNickname: String = "Bitpoints User"
+
     // Delegate for callbacks to UI
     var delegate: EcashDelegate? = null
 
@@ -134,8 +137,7 @@ class BluetoothEcashService(private val context: Context) {
             }
 
             override fun getNickname(): String? {
-                // TODO: Get from user profile
-                return "Trails User"
+                return myNickname
             }
 
             override fun isFavorite(peerID: String): Boolean {
@@ -170,6 +172,32 @@ class BluetoothEcashService(private val context: Context) {
     fun stop() {
         Log.i(TAG, "Stopping Bluetooth ecash service")
         meshService.stopServices()
+    }
+
+    /**
+     * Set the Bluetooth nickname (how you appear to nearby peers)
+     * Requires service restart to take effect
+     * 
+     * @param nickname Display name for Bluetooth mesh (3-32 characters)
+     */
+    fun setNickname(nickname: String) {
+        if (nickname.length < 3 || nickname.length > 32) {
+            Log.w(TAG, "Nickname must be 3-32 characters, ignoring")
+            return
+        }
+        
+        val oldNickname = myNickname
+        myNickname = nickname
+        Log.i(TAG, "Bluetooth nickname updated: '$oldNickname' -> '$myNickname'")
+        
+        // Note: Service must be restarted for nickname change to take effect in announcements
+    }
+
+    /**
+     * Get the current Bluetooth nickname
+     */
+    fun getNickname(): String {
+        return myNickname
     }
 
     /**

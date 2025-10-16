@@ -1,10 +1,12 @@
 import { defineStore } from 'pinia';
 import BluetoothEcash, { Peer, EcashMessage, SendTokenOptions } from 'src/plugins/bluetooth-ecash';
+import { webBluetoothService, WebBluetoothService } from 'src/plugins/web-bluetooth';
 import { useWalletStore } from './wallet';
 import { useNostrStore } from './nostr';
 import { useReceiveTokensStore } from './receiveTokensStore';
 import { useLocalStorage } from '@vueuse/core';
 import { notifySuccess, notifyError, notifyWarning } from 'src/js/notify';
+import { Capacitor } from '@capacitor/core';
 
 /**
  * Bluetooth Mesh Ecash Store
@@ -23,6 +25,27 @@ export const useBluetoothStore = defineStore('bluetooth', {
   }),
 
   getters: {
+    /**
+     * Check if running on desktop (PWA) vs mobile (native app)
+     */
+    isDesktop: () => {
+      return !Capacitor.isNativePlatform();
+    },
+
+    /**
+     * Check if Web Bluetooth API is available (desktop Chrome/Edge)
+     */
+    isWebBluetoothAvailable: () => {
+      return WebBluetoothService.isAvailable();
+    },
+
+    /**
+     * Check if any Bluetooth is available (native or web)
+     */
+    isBluetoothAvailable(): boolean {
+      return Capacitor.isNativePlatform() || this.isWebBluetoothAvailable;
+    },
+
     /**
      * Get peers sorted by last seen (most recent first)
      */
@@ -69,14 +92,53 @@ export const useBluetoothStore = defineStore('bluetooth', {
       if (this.isInitialized) return;
 
       try {
-        // Check if running as native app
-        // @ts-ignore
-        if (!window?.Capacitor) {
-          console.log('Bluetooth mesh not available - not running as native app');
+        // Desktop PWA with Web Bluetooth
+        if (this.isDesktop) {
+          if (!this.isWebBluetoothAvailable) {
+            console.log('Web Bluetooth not available. Use Chrome or Edge browser.');
+            return;
+          }
+
+          // Set up Web Bluetooth callbacks
+          webBluetoothService.initialize(this.nickname);
+          
+          webBluetoothService.setOnPeerDiscovered((peer) => {
+            console.log('Web Bluetooth: Peer discovered', peer);
+            this.handlePeerDiscovered({
+              peerID: peer.id,
+              nickname: peer.nickname,
+              lastSeen: peer.lastSeen,
+              isDirect: true,
+              nostrNpub: '',
+              isConnected: true,
+            });
+          });
+
+          webBluetoothService.setOnTokenReceived((token, sender) => {
+            console.log('Web Bluetooth: Token received', token);
+            // Handle received token
+            this.handleEcashReceived({
+              id: Date.now().toString(),
+              sender: sender.nickname,
+              senderPeerID: sender.id,
+              timestamp: Date.now(),
+              amount: 0, // Parse from token
+              unit: 'sat',
+              cashuToken: token,
+              mint: '',
+              memo: '',
+              claimed: false,
+              deliveryStatus: 'delivered',
+            });
+          });
+
+          this.isInitialized = true;
+          console.log('Web Bluetooth service initialized');
           return;
         }
 
-        // Set up event listeners
+        // Native mobile app
+        // Set up event listeners for native plugin
         await BluetoothEcash.addListener('ecashReceived', (event: EcashMessage) => {
           console.log('Ecash received via Bluetooth:', event);
           this.handleEcashReceived(event);
@@ -114,6 +176,31 @@ export const useBluetoothStore = defineStore('bluetooth', {
      */
     async startService() {
       try {
+        // Desktop PWA with Web Bluetooth
+        if (this.isDesktop) {
+          if (!this.isWebBluetoothAvailable) {
+            notifyError('Web Bluetooth not supported. Please use Chrome or Edge browser.');
+            return false;
+          }
+
+          console.log('Starting Web Bluetooth service...');
+          
+          // Web Bluetooth requires user interaction to request device
+          // This will show browser's device picker dialog
+          const peer = await webBluetoothService.requestDevice();
+          
+          if (!peer) {
+            notifyWarning('No Bluetooth device selected');
+            return false;
+          }
+
+          this.isActive = true;
+          notifySuccess(`Connected to ${peer.nickname}!`);
+          console.log('Web Bluetooth service started');
+          return true;
+        }
+
+        // Native mobile app
         // Request permissions first
         const { granted } = await BluetoothEcash.requestPermissions();
         if (!granted) {
@@ -121,13 +208,13 @@ export const useBluetoothStore = defineStore('bluetooth', {
           return false;
         }
 
-        // TODO: Pass nickname to native plugin when API is updated
-        // For now, nickname is stored in store but not used by native layer
-        console.log(`Starting Bluetooth mesh service (nickname: ${this.nickname})`);
+        // Set nickname in native plugin before starting
+        console.log(`Setting Bluetooth nickname: ${this.nickname}`);
+        await BluetoothEcash.setNickname({ nickname: this.nickname });
 
         await BluetoothEcash.startService();
         this.isActive = true;
-        console.log('Bluetooth mesh service started');
+        console.log(`Bluetooth mesh service started with nickname: ${this.nickname}`);
 
         // Start polling for peers
         this.startPeerPolling();
@@ -145,6 +232,14 @@ export const useBluetoothStore = defineStore('bluetooth', {
      */
     async stopService() {
       try {
+        if (this.isDesktop) {
+          webBluetoothService.disconnectAll();
+          this.isActive = false;
+          this.nearbyPeers = [];
+          console.log('Web Bluetooth service stopped');
+          return;
+        }
+
         await BluetoothEcash.stopService();
         this.isActive = false;
         this.nearbyPeers = [];
@@ -166,7 +261,14 @@ export const useBluetoothStore = defineStore('bluetooth', {
       const wasActive = this.isActive;
       this.nickname = newNickname;
 
-      // Restart service to apply new nickname
+      // Update in native plugin (mobile) or web bluetooth service (desktop)
+      if (!this.isDesktop) {
+        await BluetoothEcash.setNickname({ nickname: newNickname });
+      } else {
+        webBluetoothService.initialize(newNickname);
+      }
+
+      // Restart service to apply new nickname in announcements
       if (wasActive) {
         await this.stopService();
         await this.startService();
@@ -181,6 +283,28 @@ export const useBluetoothStore = defineStore('bluetooth', {
       console.log('🔵 [STORE] sendToken called with:', options);
       
       try {
+        // Desktop PWA with Web Bluetooth
+        if (this.isDesktop) {
+          if (!options.peerID) {
+            notifyError('Web Bluetooth requires specific peer selection');
+            return null;
+          }
+
+          console.log('🔵 [WEB] Sending token via Web Bluetooth...');
+          const success = await webBluetoothService.sendToken(options.token, options.peerID);
+          
+          if (success) {
+            const messageId = Date.now().toString();
+            this.pendingMessages.push(messageId);
+            console.log('🔵 [WEB] Success, messageId:', messageId);
+            return messageId;
+          } else {
+            notifyError('Failed to send token via Web Bluetooth');
+            return null;
+          }
+        }
+
+        // Native mobile app
         console.log('🔵 [STORE] Calling BluetoothEcash.sendToken...');
         const result = await BluetoothEcash.sendToken(options);
         console.log('🔵 [STORE] Native returned:', result);
