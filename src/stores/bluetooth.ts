@@ -36,7 +36,12 @@ export const useBluetoothStore = defineStore('bluetooth', {
      * Check if Web Bluetooth API is available (desktop Chrome/Edge)
      */
     isWebBluetoothAvailable: () => {
-      return WebBluetoothService.isAvailable();
+      try {
+        return WebBluetoothService.isAvailable();
+      } catch (error) {
+        console.error('Error checking Web Bluetooth availability:', error);
+        return false;
+      }
     },
 
     /**

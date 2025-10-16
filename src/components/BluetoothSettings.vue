@@ -75,7 +75,7 @@
               icon="bluetooth_searching"
               label="Connect Device"
               @click="connectDesktopDevice"
-              :disable="!bluetoothStore.isWebBluetoothAvailable"
+              :disable="!isWebBluetoothSupported"
             />
             <!-- Desktop: Show disconnect button when active -->
             <q-btn
@@ -150,7 +150,7 @@
     <q-card-section class="q-pt-sm">
       <div class="text-caption text-grey-6">
         <q-icon name="info" size="xs" class="q-mr-xs" />
-        <span v-if="isDesktop && !bluetoothStore.isWebBluetoothAvailable">
+        <span v-if="isDesktop && !isWebBluetoothSupported">
           ⚠️ Web Bluetooth not available. Please use <strong>Chrome</strong> or <strong>Edge</strong> browser.
         </span>
         <span v-else-if="isDesktop">
@@ -176,6 +176,15 @@ const favoritesStore = useFavoritesStore();
 
 const localNickname = ref('');
 const isDesktop = computed(() => !Capacitor.isNativePlatform());
+
+const isWebBluetoothSupported = computed(() => {
+  try {
+    return typeof navigator !== 'undefined' && 'bluetooth' in navigator;
+  } catch (error) {
+    console.error('Error checking Web Bluetooth support:', error);
+    return false;
+  }
+});
 
 const nicknameChanged = computed(() => {
   return localNickname.value !== bluetoothStore.nickname;
