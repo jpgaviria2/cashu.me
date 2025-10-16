@@ -66,7 +66,30 @@
             </q-item-label>
           </q-item-section>
           <q-item-section side>
+            <!-- Desktop: Show button to connect to device -->
+            <q-btn
+              v-if="isDesktop && !bluetoothStore.isActive"
+              outline
+              color="primary"
+              size="sm"
+              icon="bluetooth_searching"
+              label="Connect Device"
+              @click="connectDesktopDevice"
+              :disable="!bluetoothStore.isWebBluetoothAvailable"
+            />
+            <!-- Desktop: Show disconnect button when active -->
+            <q-btn
+              v-else-if="isDesktop && bluetoothStore.isActive"
+              flat
+              color="negative"
+              size="sm"
+              icon="bluetooth_disabled"
+              label="Disconnect"
+              @click="toggleBluetooth(false)"
+            />
+            <!-- Mobile: Show toggle -->
             <q-toggle
+              v-else
               :model-value="bluetoothStore.isActive"
               @update:model-value="toggleBluetooth"
               color="primary"
@@ -174,9 +197,18 @@ async function saveNickname() {
 
 async function toggleBluetooth(enabled: boolean) {
   if (enabled) {
-    await bluetoothStore.start();
+    await bluetoothStore.startService();
   } else {
-    await bluetoothStore.stop();
+    await bluetoothStore.stopService();
+  }
+}
+
+async function connectDesktopDevice() {
+  try {
+    // For desktop, this will show the browser's device picker
+    await bluetoothStore.startService();
+  } catch (error) {
+    console.error('Failed to connect to Bluetooth device:', error);
   }
 }
 
