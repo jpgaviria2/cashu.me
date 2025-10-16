@@ -109,6 +109,7 @@
                 outline
                 size="0.6rem"
                 v-if="
+                  !isNativeApp &&
                   getPwaDisplayMode() == 'browser' &&
                   deferredPWAInstallPrompt != null
                 "
@@ -123,8 +124,8 @@
           </div>
         </div>
 
-        <iOSPWAPrompt />
-        <AndroidPWAPrompt />
+        <iOSPWAPrompt v-if="!isNativeApp" />
+        <AndroidPWAPrompt v-if="!isNativeApp" />
       </div>
     </div>
 
@@ -381,6 +382,10 @@ export default {
   },
   computed: {
     ...mapState(useUiStore, ["tickerShort"]),
+    isNativeApp: function () {
+      // @ts-ignore
+      return !!window?.Capacitor;
+    },
     ...mapWritableState(useUiStore, [
       "showInvoiceDetails",
       "tab",

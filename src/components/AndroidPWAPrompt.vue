@@ -44,7 +44,8 @@ export default defineComponent({
     if (
       this.showAndroidPWAPromptLocal &&
       this.isChromeOnAndroid() &&
-      !this.isInStandaloneMode()
+      !this.isInStandaloneMode() &&
+      !this.isNativeApp()
     ) {
       this.showAndroidPWAPrompt = true;
     }
@@ -63,6 +64,10 @@ export default defineComponent({
     },
     isInStandaloneMode() {
       return window.matchMedia("(display-mode: standalone)").matches;
+    },
+    isNativeApp() {
+      // @ts-ignore
+      return !!window?.Capacitor;
     },
   },
 });

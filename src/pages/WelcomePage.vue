@@ -62,7 +62,8 @@
 </template>
 
 <script lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, ref, watch } from "vue";
+import { useRouter } from "vue-router";
 import { useWelcomeStore } from "src/stores/welcome";
 import { useStorageStore } from "src/stores/storage";
 import WelcomeSlide1 from "./welcome/WelcomeSlide1.vue";
@@ -110,6 +111,7 @@ export default {
       )?.label || "Language";
   },
   setup() {
+    const router = useRouter();
     const welcomeStore = useWelcomeStore();
     const storageStore = useStorageStore();
     const fileUpload = ref(null);
@@ -135,6 +137,14 @@ export default {
 
     onMounted(() => {
       welcomeStore.initializeWelcome();
+    });
+
+    // Watch for welcome completion and navigate to wallet (PWA only)
+    watch(() => welcomeStore.showWelcome, (newValue) => {
+      if (!newValue && !window.Capacitor) {
+        // Only for PWA - let Vue Router handle navigation
+        router.push('/');
+      }
     });
 
     return {

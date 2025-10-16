@@ -59,9 +59,14 @@ export const useWelcomeStore = defineStore("welcome", {
      */
     closeWelcome() {
       this.showWelcome = false;
-      // Redirect to home or desired route
-      window.location.href =
-        "/" + window.location.search + window.location.hash;
+      // For PWA, let Vue Router handle navigation
+      // For Android app, use window.location for proper app behavior
+      if (typeof window !== 'undefined' && window.Capacitor) {
+        // Android app - use window.location
+        window.location.href =
+          "/" + window.location.search + window.location.hash;
+      }
+      // PWA - let Vue Router handle the navigation automatically
     },
 
     /**

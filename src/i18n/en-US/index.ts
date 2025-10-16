@@ -26,13 +26,13 @@ export default {
         label: "Paste",
       },
       receive: {
-        label: "Receive Points",
+        label: "Receive",
       },
       scan: {
         label: "Scan",
       },
       send: {
-        label: "Send Points",
+        label: "Pay",
       },
       swap: {
         label: "Swap",
@@ -495,7 +495,7 @@ export default {
         label: "@:global.actions.add_mint.label",
       },
       receive: {
-        label: "Receive Points",
+        label: "Receive",
       },
     },
   },

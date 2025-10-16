@@ -43,7 +43,8 @@ export default defineComponent({
     if (
       this.showIosPWAPromptLocal &&
       this.isiOsSafari() &&
-      !this.isInStandaloneMode()
+      !this.isInStandaloneMode() &&
+      !this.isNativeApp()
     ) {
       this.showIosPWAPrompt = true;
     }
@@ -61,6 +62,10 @@ export default defineComponent({
     },
     isInStandaloneMode() {
       return "standalone" in window.navigator && window.navigator.standalone;
+    },
+    isNativeApp() {
+      // @ts-ignore
+      return !!window?.Capacitor;
     },
   },
 });
