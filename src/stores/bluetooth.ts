@@ -121,12 +121,13 @@ export const useBluetoothStore = defineStore('bluetooth', {
           return false;
         }
 
-        // Initialize with current nickname
-        await BluetoothEcash.initialize({ nickname: this.nickname });
+        // TODO: Pass nickname to native plugin when API is updated
+        // For now, nickname is stored in store but not used by native layer
+        console.log(`Starting Bluetooth mesh service (nickname: ${this.nickname})`);
 
         await BluetoothEcash.startService();
         this.isActive = true;
-        console.log(`Bluetooth mesh service started with nickname: ${this.nickname}`);
+        console.log('Bluetooth mesh service started');
 
         // Start polling for peers
         this.startPeerPolling();
