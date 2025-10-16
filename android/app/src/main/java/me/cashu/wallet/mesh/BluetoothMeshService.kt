@@ -624,6 +624,31 @@ class BluetoothMeshService(private val context: Context) {
     }
 
     /**
+     * Send private text message to specific peer
+     */
+    fun sendMessageToPeer(peerID: String, content: String) {
+        if (content.isEmpty()) return
+
+        serviceScope.launch {
+            val packet = BitchatPacket(
+                version = 1u,
+                type = MessageType.MESSAGE.value,
+                senderID = hexStringToByteArray(myPeerID),
+                recipientID = hexStringToByteArray(peerID),  // Target specific peer
+                timestamp = System.currentTimeMillis().toULong(),
+                payload = content.toByteArray(Charsets.UTF_8),
+                signature = null,
+                ttl = MAX_TTL
+            )
+
+            // Sign the packet before sending
+            val signedPacket = signPacketBeforeBroadcast(packet)
+            connectionManager.sendPacketToPeer(peerID, signedPacket)
+            Log.d(TAG, "Sent text message to $peerID (${content.length} chars)")
+        }
+    }
+
+    /**
      * Send a file over mesh as a broadcast MESSAGE (public mesh timeline/channels).
      */
     fun sendFileBroadcast(file: me.cashu.wallet.model.BitchatFilePacket) {

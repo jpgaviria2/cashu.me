@@ -153,12 +153,19 @@ export const useBluetoothStore = defineStore('bluetooth', {
      * Send ecash token to nearby peer(s)
      */
     async sendToken(options: SendTokenOptions): Promise<string | null> {
+      console.log('🔵 [STORE] sendToken called with:', options);
+      
       try {
-        const { messageId } = await BluetoothEcash.sendToken(options);
+        console.log('🔵 [STORE] Calling BluetoothEcash.sendToken...');
+        const result = await BluetoothEcash.sendToken(options);
+        console.log('🔵 [STORE] Native returned:', result);
+        
+        const { messageId } = result;
         this.pendingMessages.push(messageId);
+        console.log('🔵 [STORE] Success, returning messageId:', messageId);
         return messageId;
       } catch (e) {
-        console.error('Failed to send token:', e);
+        console.error('🔵 [STORE ERROR]:', e);
         notifyError('Failed to send token via Bluetooth');
         return null;
       }

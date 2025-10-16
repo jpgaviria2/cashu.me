@@ -360,12 +360,20 @@ class MessageHandler(private val myPeerID: String, private val appContext: andro
         val packet = routed.packet
         val peerID = routed.peerID ?: "unknown"
 
+        Log.d(TAG, "📨 handleBroadcastMessage from ${peerID.take(8)}, payload size: ${packet.payload.size}")
+
         // Enforce: only accept public messages from verified peers we know
         val peerInfo = delegate?.getPeerInfo(peerID)
-        if (peerInfo == null || !peerInfo.isVerifiedNickname) {
-            Log.w(TAG, "🚫 Dropping public message from unverified or unknown peer ${peerID.take(8)}...")
+        if (peerInfo == null) {
+            Log.w(TAG, "🚫 Dropping message - peer info is NULL for ${peerID.take(8)}")
             return
         }
+        if (!peerInfo.isVerifiedNickname) {
+            Log.w(TAG, "🚫 Dropping message - peer ${peerID.take(8)} not verified (nickname: ${peerInfo.nickname})")
+            return
+        }
+
+        Log.d(TAG, "✅ Message from verified peer ${peerInfo.nickname}, processing...")
 
         try {
             // Try file packet first (voice, image, etc.) and log outcome for FILE_TRANSFER
@@ -409,10 +417,15 @@ class MessageHandler(private val myPeerID: String, private val appContext: andro
      */
     private suspend fun handlePrivateMessage(packet: BitchatPacket, peerID: String) {
         try {
-            // Verify signature if present
-            if (packet.signature != null && !delegate?.verifySignature(packet, peerID)!!) {
-                Log.w(TAG, "Invalid signature for private message from $peerID")
-                return
+            // Verify signature if present (skip for MESSAGE type - Cashu tokens are bearer tokens)
+            val messageType = me.cashu.wallet.protocol.MessageType.fromValue(packet.type)
+            if (messageType != me.cashu.wallet.protocol.MessageType.MESSAGE) {
+                if (packet.signature != null && !delegate?.verifySignature(packet, peerID)!!) {
+                    Log.w(TAG, "Invalid signature for private message from $peerID")
+                    return
+                }
+            } else {
+                Log.d(TAG, "📝 Skipping signature verification for TEXT message (bearer token)")
             }
 
             // Try file packet first (voice, image, etc.) and log outcome for FILE_TRANSFER

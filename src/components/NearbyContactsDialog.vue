@@ -199,6 +199,10 @@ export default defineComponent({
         // Send to each selected peer
         let successCount = 0;
         for (const peerID of selectedPeers.value) {
+          console.log('🟢 [UI] About to call bluetoothStore.sendToken for peer:', peerID);
+          console.log('🟢 [UI] Token:', tokenBase64.substring(0, 50) + '...');
+          console.log('🟢 [UI] Amount:', sendAmount, unit.value);
+          
           const messageId = await bluetoothStore.sendToken({
             token: tokenBase64,
             amount: sendAmount,
@@ -209,6 +213,8 @@ export default defineComponent({
             senderNpub: nostrStore.pubkey || '',
           });
 
+          console.log('🟢 [UI] sendToken returned:', messageId);
+          
           if (messageId) {
             successCount++;
           }

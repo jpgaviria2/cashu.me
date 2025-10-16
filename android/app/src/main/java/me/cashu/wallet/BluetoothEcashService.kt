@@ -51,9 +51,58 @@ class BluetoothEcashService(private val context: Context) {
     private fun setupMeshDelegate() {
         meshService.delegate = object : me.cashu.wallet.mesh.BluetoothMeshDelegate {
             override fun didReceiveMessage(message: me.cashu.wallet.model.BitchatMessage) {
-                // We handle ecash via custom messages, not standard BitchatMessage
-                // Check if message content contains ecash token
-                Log.d(TAG, "Received message: ${message.content.take(50)}")
+                // Check if message content contains a Cashu token
+                val content = message.content.trim()
+                Log.d(TAG, "Received TEXT message: ${content.take(50)}...")
+
+                // Detect Cashu token (starts with "cashuA" or "cashuB")
+                if (content.startsWith("cashuA") || content.startsWith("cashuB")) {
+                    Log.i(TAG, "🎉 Detected Cashu token in TEXT message!")
+
+                    // Parse token and optional metadata
+                    val lines = content.split("\n")
+                    val tokenString = lines[0]  // First line is always the token
+
+                    // Extract metadata if present (from memo format)
+                    var amount = 0
+                    var unit = "sat"
+                    var parsedMemo: String? = null
+
+                    for (line in lines) {
+                        when {
+                            line.startsWith("Amount: ") -> {
+                                val parts = line.substringAfter("Amount: ").split(" ")
+                                amount = parts[0].toIntOrNull() ?: 0
+                                unit = parts.getOrNull(1) ?: "sat"
+                            }
+                            line.startsWith("Memo: ") -> {
+                                parsedMemo = line.substringAfter("Memo: ")
+                            }
+                        }
+                    }
+
+                    // Create EcashMessage
+                    val ecashMessage = EcashMessage(
+                        id = UUID.randomUUID().toString(),
+                        sender = message.sender,
+                        senderPeerID = message.senderPeerID ?: "unknown",
+                        timestamp = message.timestamp,
+                        amount = amount,
+                        unit = unit,
+                        cashuToken = tokenString,
+                        mint = "",  // Will be determined when claiming
+                        memo = parsedMemo,
+                        claimed = false,
+                        deliveryStatus = DeliveryStatus.Delivered(message.senderPeerID ?: "unknown", Date()),
+                        recipientNpub = null
+                    )
+
+                    // Store and notify
+                    receivedTokens[ecashMessage.id] = ecashMessage
+                    delegate?.onEcashReceived(ecashMessage)
+
+                    Log.i(TAG, "✅ Stored ecash token: ${amount} ${unit} from ${message.sender.take(16)}...")
+                }
             }
 
             override fun didUpdatePeerList(peers: List<String>) {
@@ -144,67 +193,56 @@ class BluetoothEcashService(private val context: Context) {
         memo: String?,
         senderNpub: String
     ): String {
-        val message = EcashMessage(
-            sender = senderNpub,
-            senderPeerID = meshService.myPeerID,
-            timestamp = Date(),
-            amount = amount,
-            unit = unit,
-            cashuToken = token,
-            mint = mint,
-            memo = memo,
-            claimed = false,
-            deliveryStatus = DeliveryStatus.Sending,
-            recipientNpub = peerID  // peerID can be used as recipient identifier
-        )
+        val messageId = UUID.randomUUID().toString()
 
-        // Store in pending tokens
-        pendingTokens[message.id] = message
-
-        // Convert to binary payload
-        val payload = message.toBinaryPayload()
-        if (payload == null) {
-            Log.e(TAG, "Failed to serialize ecash message")
-            delegate?.onTokenSendFailed(message.id, "Serialization failed")
-            return message.id
+        // SIMPLIFIED: Send as TEXT message (Cashu tokens are bearer tokens - no additional encryption needed)
+        // Format: Just the token, or token with metadata if memo provided
+        val messageText = if (memo != null) {
+            "$token\n---\nMemo: $memo\nAmount: $amount $unit\nFrom: ${senderNpub.take(16)}..."
+        } else {
+            token  // Just the raw Cashu token for maximum simplicity
         }
 
-        // Create BitchatPacket with custom ecash type
-        val recipientIDBytes = if (peerID != null) hexToBytes(peerID) else null
-        val packet = BitchatPacket(
-            version = 1u,
-            type = ECASH_MESSAGE_TYPE,
-            senderID = hexToBytes(meshService.myPeerID),
-            recipientID = recipientIDBytes,
-            timestamp = System.currentTimeMillis().toULong(),
-            payload = payload,
-            ttl = 7u  // Max hops for mesh relay
-        )
+        Log.d(TAG, "Sending ecash token as TEXT message: ${amount} ${unit}, token length: ${token.length}")
 
         serviceScope.launch {
             try {
                 if (peerID != null) {
                     // Send to specific peer
-                    Log.d(TAG, "Sending ecash token to peer $peerID: ${amount} ${unit}")
-                    meshService.sendCustomPacketToPeer(peerID, packet)
+                    Log.d(TAG, "Sending TEXT to specific peer: $peerID")
+                    meshService.sendMessageToPeer(peerID, messageText)
                 } else {
                     // Broadcast to all nearby peers
-                    Log.d(TAG, "Broadcasting ecash token: ${amount} ${unit}")
-                    meshService.broadcastCustomPacket(packet)
+                    Log.d(TAG, "Broadcasting TEXT to all nearby peers")
+                    meshService.sendMessage(messageText)
                 }
 
-                // Update status
-                val updatedMessage = message.copy(deliveryStatus = DeliveryStatus.Sent)
-                pendingTokens[message.id] = updatedMessage
-                delegate?.onTokenSent(message.id)
+                // Track as pending
+                val message = EcashMessage(
+                    id = messageId,
+                    sender = senderNpub,
+                    senderPeerID = meshService.myPeerID,
+                    timestamp = Date(),
+                    amount = amount,
+                    unit = unit,
+                    cashuToken = token,
+                    mint = mint,
+                    memo = memo,
+                    claimed = false,
+                    deliveryStatus = DeliveryStatus.Sent,
+                    recipientNpub = peerID
+                )
+                pendingTokens[messageId] = message
+                delegate?.onTokenSent(messageId)
 
+                Log.i(TAG, "Ecash token sent as TEXT: $messageId")
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to send ecash token", e)
-                delegate?.onTokenSendFailed(message.id, e.message ?: "Unknown error")
+                delegate?.onTokenSendFailed(messageId, e.message ?: "Unknown error")
             }
         }
 
-        return message.id
+        return messageId
     }
 
     /**
