@@ -42,21 +42,35 @@ export class WebBluetoothService {
    */
   async requestDevice(): Promise<WebBluetoothPeer | null> {
     try {
+      console.log('🔍 Starting Web Bluetooth device discovery...');
+      console.log('📍 Current URL:', window.location.href);
+      console.log('🔒 HTTPS:', window.location.protocol === 'https:');
+      
+      // Check if Web Bluetooth is available
+      if (!navigator.bluetooth) {
+        throw new Error('Web Bluetooth not supported in this browser');
+      }
+      
       // First try to find devices with our specific service
       let device;
       try {
+        console.log('🎯 Attempting to find devices with Bitpoints service...');
         device = await navigator.bluetooth.requestDevice({
           filters: [{ services: [SERVICE_UUID] }],
           optionalServices: [SERVICE_UUID]
         });
+        console.log('✅ Found device with Bitpoints service:', device.name);
       } catch (serviceError) {
-        console.log('No devices with Bitpoints service found, trying generic BLE devices...');
+        console.log('⚠️ No devices with Bitpoints service found, trying generic BLE devices...');
+        console.log('Service error:', serviceError);
         
         // Fallback: Look for any BLE device (more compatible)
+        console.log('🔍 Requesting all BLE devices...');
         device = await navigator.bluetooth.requestDevice({
           acceptAllDevices: true,
           optionalServices: [SERVICE_UUID]
         });
+        console.log('✅ Found generic BLE device:', device.name);
       }
 
       // Extract nickname from device name

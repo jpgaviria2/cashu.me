@@ -183,26 +183,33 @@ export const useBluetoothStore = defineStore('bluetooth', {
       try {
         // Desktop PWA with Web Bluetooth
         if (this.isDesktop) {
+          console.log('🖥️ Desktop PWA detected, using Web Bluetooth...');
+          
           if (!this.isWebBluetoothAvailable) {
+            console.error('❌ Web Bluetooth not available');
             notifyError('Web Bluetooth not supported. Please use Chrome or Edge browser.');
             return false;
           }
 
-          console.log('Starting Web Bluetooth service...');
+          console.log('✅ Web Bluetooth available, starting service...');
+          console.log('🔗 Current URL:', window.location.href);
+          console.log('🔒 HTTPS enabled:', window.location.protocol === 'https:');
           
           // Web Bluetooth requires user interaction to request device
           // This will show browser's device picker dialog
+          console.log('🎯 Requesting Bluetooth device...');
           const peer = await webBluetoothService.requestDevice();
           
           if (!peer) {
             // Don't show error for user cancellation
-            console.log('User cancelled device selection or no device available');
+            console.log('⚠️ User cancelled device selection or no device available');
             return false;
           }
 
+          console.log('🎉 Device connected successfully:', peer);
           this.isActive = true;
           notifySuccess(`Connected to ${peer.nickname}!`);
-          console.log('Web Bluetooth service started');
+          console.log('✅ Web Bluetooth service started');
           return true;
         }
 
