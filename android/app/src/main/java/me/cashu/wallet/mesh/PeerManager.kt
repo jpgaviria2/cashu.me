@@ -324,6 +324,13 @@ class PeerManager {
     }
     
     /**
+     * Get all peers as a list
+     */
+    fun getAllPeersInfo(): List<PeerInfo> {
+        return peers.values.toList()
+    }
+    
+    /**
      * Get list of active peer IDs
      */
     fun getActivePeerIDs(): List<String> {

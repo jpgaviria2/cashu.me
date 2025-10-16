@@ -371,7 +371,7 @@ class NoiseEncryptionService(private val context: Context) {
     /**
      * Sign a BitchatPacket using our Ed25519 signing key
      */
-    fun signPacket(packet: com.bitchat.android.protocol.BitchatPacket): com.bitchat.android.protocol.BitchatPacket? {
+    fun signPacket(packet: me.cashu.wallet.protocol.BitchatPacket): me.cashu.wallet.protocol.BitchatPacket? {
         // Create canonical packet bytes for signing
         val packetData = packet.toBinaryDataForSigning() ?: return null
         
@@ -385,7 +385,7 @@ class NoiseEncryptionService(private val context: Context) {
     /**
      * Verify a BitchatPacket signature using the provided public key
      */
-    fun verifyPacketSignature(packet: com.bitchat.android.protocol.BitchatPacket, publicKey: ByteArray): Boolean {
+    fun verifyPacketSignature(packet: me.cashu.wallet.protocol.BitchatPacket, publicKey: ByteArray): Boolean {
         val signature = packet.signature ?: return false
         
         // Create canonical packet bytes for verification (without signature)

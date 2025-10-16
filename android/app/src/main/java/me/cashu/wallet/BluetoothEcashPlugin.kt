@@ -15,6 +15,7 @@ import com.getcapacitor.JSObject
 import com.getcapacitor.JSArray
 import me.cashu.wallet.model.EcashMessage
 import me.cashu.wallet.mesh.PeerManager
+import me.cashu.wallet.mesh.PeerInfo
 
 /**
  * Capacitor plugin to expose Bluetooth ecash functionality to JavaScript
@@ -54,8 +55,8 @@ class BluetoothEcashPlugin : Plugin() {
                     notifyListeners("ecashReceived", ecashMessageToJSObject(message))
                 }
                 
-                override fun onPeerDiscovered(peer: PeerManager.PeerInfo) {
-                    Log.d(TAG, "Peer discovered: ${peer.peerID}")
+                override fun onPeerDiscovered(peer: PeerInfo) {
+                    Log.d(TAG, "Peer discovered: ${peer.id}")
                     notifyListeners("peerDiscovered", peerToJSObject(peer))
                 }
                 
@@ -253,7 +254,7 @@ class BluetoothEcashPlugin : Plugin() {
      * Request Bluetooth permissions
      */
     @PluginMethod
-    fun requestPermissions(call: PluginCall) {
+    override fun requestPermissions(call: PluginCall) {
         if (hasRequiredPermissions()) {
             val ret = JSObject()
             ret.put("granted", true)
@@ -272,7 +273,7 @@ class BluetoothEcashPlugin : Plugin() {
     /**
      * Check if all required permissions are granted
      */
-    private fun hasRequiredPermissions(): Boolean {
+    override fun hasRequiredPermissions(): Boolean {
         val permissions = getRequiredPermissions()
         return permissions.all { permission ->
             ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
@@ -303,13 +304,14 @@ class BluetoothEcashPlugin : Plugin() {
     /**
      * Convert PeerInfo to JSObject for JavaScript
      */
-    private fun peerToJSObject(peer: PeerManager.PeerInfo): JSObject {
+    private fun peerToJSObject(peer: PeerInfo): JSObject {
         val obj = JSObject()
-        obj.put("peerID", peer.peerID)
-        obj.put("nickname", peer.nickname ?: "")
+        obj.put("peerID", peer.id)  // 'id' in Kotlin, 'peerID' in JS
+        obj.put("nickname", peer.nickname)
         obj.put("lastSeen", peer.lastSeen)
-        obj.put("isDirect", peer.isDirect)
-        obj.put("nostrNpub", peer.nostrNpub ?: "")
+        obj.put("isDirect", peer.isDirectConnection)  // 'isDirectConnection' in Kotlin
+        obj.put("nostrNpub", "")  // Not stored in PeerInfo yet
+        obj.put("isConnected", peer.isConnected)
         return obj
     }
     

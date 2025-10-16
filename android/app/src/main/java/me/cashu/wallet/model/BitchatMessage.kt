@@ -16,40 +16,6 @@ enum class BitchatMessageType : Parcelable {
 }
 
 /**
- * Delivery status for messages - exact same as iOS version
- */
-sealed class DeliveryStatus : Parcelable {
-    @Parcelize
-    object Sending : DeliveryStatus()
-
-    @Parcelize
-    object Sent : DeliveryStatus()
-
-    @Parcelize
-    data class Delivered(val to: String, val at: Date) : DeliveryStatus()
-
-    @Parcelize
-    data class Read(val by: String, val at: Date) : DeliveryStatus()
-
-    @Parcelize
-    data class Failed(val reason: String) : DeliveryStatus()
-
-    @Parcelize
-    data class PartiallyDelivered(val reached: Int, val total: Int) : DeliveryStatus()
-
-    fun getDisplayText(): String {
-        return when (this) {
-            is Sending -> "Sending..."
-            is Sent -> "Sent"
-            is Delivered -> "Delivered to ${this.to}"
-            is Read -> "Read by ${this.by}"
-            is Failed -> "Failed: ${this.reason}"
-            is PartiallyDelivered -> "Delivered to ${this.reached}/${this.total}"
-        }
-    }
-}
-
-/**
  * BitchatMessage - 100% compatible with iOS version
  */
 @Parcelize

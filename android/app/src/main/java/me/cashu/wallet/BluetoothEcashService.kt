@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import me.cashu.wallet.mesh.BluetoothMeshService
 import me.cashu.wallet.mesh.BluetoothMeshDelegate
+import me.cashu.wallet.mesh.PeerInfo
 import me.cashu.wallet.model.EcashMessage
 import me.cashu.wallet.model.DeliveryStatus
 import me.cashu.wallet.protocol.BitchatPacket
@@ -48,40 +49,49 @@ class BluetoothEcashService(private val context: Context) {
      * Wire up the mesh service delegate to handle incoming packets
      */
     private fun setupMeshDelegate() {
-        meshService.delegate = object : BluetoothMeshDelegate {
+        meshService.delegate = object : me.cashu.wallet.mesh.BluetoothMeshDelegate {
             override fun didReceiveMessage(message: me.cashu.wallet.model.BitchatMessage) {
-                // We handle ecash via custom packet type, not BitchatMessage
+                // We handle ecash via custom messages, not standard BitchatMessage
+                // Check if message content contains ecash token
+                Log.d(TAG, "Received message: ${message.content.take(50)}")
             }
             
-            override fun didUpdatePeerList(peers: List<me.cashu.wallet.mesh.PeerManager.PeerInfo>) {
+            override fun didUpdatePeerList(peers: List<String>) {
                 Log.d(TAG, "Peer list updated: ${peers.size} peers")
-                peers.forEach { peer ->
-                    delegate?.onPeerDiscovered(peer)
+                // Get full peer info and notify delegate
+                peers.forEach { peerID ->
+                    meshService.getAllPeers().find { it.id == peerID }?.let { peer ->
+                        delegate?.onPeerDiscovered(peer)
+                    }
                 }
             }
             
-            override fun didReceiveCustomPacket(packet: BitchatPacket, fromPeerID: String?, relayAddress: String?) {
-                // Check if this is an ecash packet
-                if (packet.type == ECASH_MESSAGE_TYPE) {
-                    handleIncomingEcashPacket(packet, fromPeerID, relayAddress)
-                }
+            override fun didReceiveChannelLeave(channel: String, fromPeer: String) {
+                // Not used for ecash - channels are for group chat
             }
             
-            override fun didUpdateNostrPublicKey(peerID: String, nostrPublicKey: String) {
-                Log.d(TAG, "Peer $peerID updated nostr key: $nostrPublicKey")
+            override fun didReceiveDeliveryAck(messageID: String, recipientPeerID: String) {
+                Log.d(TAG, "Delivery ack for message $messageID from $recipientPeerID")
+                delegate?.onTokenDelivered(messageID, recipientPeerID)
             }
             
-            override fun didReceiveIdentityAnnouncement(peerID: String, publicKey: ByteArray, nickname: String?) {
-                Log.d(TAG, "Identity announcement from $peerID: ${nickname ?: "no nickname"}")
+            override fun didReceiveReadReceipt(messageID: String, recipientPeerID: String) {
+                Log.d(TAG, "Read receipt for message $messageID from $recipientPeerID")
             }
             
-            override fun didConnectToPeer(peerID: String, device: BluetoothDevice?) {
-                Log.d(TAG, "Connected to peer: $peerID")
+            override fun decryptChannelMessage(encryptedContent: ByteArray, channel: String): String? {
+                // Not used for ecash
+                return null
             }
             
-            override fun didDisconnectFromPeer(peerID: String) {
-                Log.d(TAG, "Disconnected from peer: $peerID")
-                delegate?.onPeerLost(peerID)
+            override fun getNickname(): String? {
+                // TODO: Get from user profile
+                return "Trails User"
+            }
+            
+            override fun isFavorite(peerID: String): Boolean {
+                // All peers are treated equally for ecash
+                return false
             }
         }
     }
@@ -92,7 +102,7 @@ class BluetoothEcashService(private val context: Context) {
      */
     fun start() {
         Log.i(TAG, "Starting Bluetooth ecash service")
-        meshService.start()
+        meshService.startServices()
     }
     
     /**
@@ -100,7 +110,7 @@ class BluetoothEcashService(private val context: Context) {
      */
     fun stop() {
         Log.i(TAG, "Stopping Bluetooth ecash service")
-        meshService.stop()
+        meshService.stopServices()
     }
     
     /**
@@ -152,9 +162,9 @@ class BluetoothEcashService(private val context: Context) {
         // Create BitchatPacket with custom ecash type
         val packet = BitchatPacket(
             type = ECASH_MESSAGE_TYPE,
-            payload = payload,
             ttl = 7u,  // Max hops for mesh relay
-            timestamp = System.currentTimeMillis()
+            senderID = meshService.myPeerID,
+            payload = payload
         )
         
         serviceScope.launch {
@@ -162,11 +172,11 @@ class BluetoothEcashService(private val context: Context) {
                 if (peerID != null) {
                     // Send to specific peer
                     Log.d(TAG, "Sending ecash token to peer $peerID: ${amount} ${unit}")
-                    meshService.sendPacketToPeer(peerID, packet)
+                    meshService.sendCustomPacketToPeer(peerID, packet)
                 } else {
                     // Broadcast to all nearby peers
                     Log.d(TAG, "Broadcasting ecash token: ${amount} ${unit}")
-                    meshService.broadcastPacket(packet)
+                    meshService.broadcastCustomPacket(packet)
                 }
                 
                 // Update status
@@ -200,7 +210,7 @@ class BluetoothEcashService(private val context: Context) {
     /**
      * Get list of currently available peers
      */
-    fun getAvailablePeers(): List<me.cashu.wallet.mesh.PeerManager.PeerInfo> {
+    fun getAvailablePeers(): List<PeerInfo> {
         return meshService.getAllPeers()
     }
     
@@ -284,7 +294,7 @@ class BluetoothEcashService(private val context: Context) {
      */
     fun destroy() {
         serviceScope.cancel()
-        meshService.stop()
+        meshService.stopServices()
     }
 }
 
@@ -300,7 +310,7 @@ interface EcashDelegate {
     /**
      * Called when a new peer is discovered nearby
      */
-    fun onPeerDiscovered(peer: me.cashu.wallet.mesh.PeerManager.PeerInfo)
+    fun onPeerDiscovered(peer: PeerInfo)
     
     /**
      * Called when a peer disconnects

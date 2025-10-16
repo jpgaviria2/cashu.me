@@ -369,7 +369,7 @@ class MessageHandler(private val myPeerID: String, private val appContext: andro
         
         try {
             // Try file packet first (voice, image, etc.) and log outcome for FILE_TRANSFER
-            val isFileTransfer = com.bitchat.android.protocol.MessageType.fromValue(packet.type) == com.bitchat.android.protocol.MessageType.FILE_TRANSFER
+            val isFileTransfer = me.cashu.wallet.protocol.MessageType.fromValue(packet.type) == me.cashu.wallet.protocol.MessageType.FILE_TRANSFER
             val file = me.cashu.wallet.model.BitchatFilePacket.decode(packet.payload)
             if (file != null) {
                 if (isFileTransfer) {
@@ -416,7 +416,7 @@ class MessageHandler(private val myPeerID: String, private val appContext: andro
             }
 
             // Try file packet first (voice, image, etc.) and log outcome for FILE_TRANSFER
-            val isFileTransfer = com.bitchat.android.protocol.MessageType.fromValue(packet.type) == com.bitchat.android.protocol.MessageType.FILE_TRANSFER
+            val isFileTransfer = me.cashu.wallet.protocol.MessageType.fromValue(packet.type) == me.cashu.wallet.protocol.MessageType.FILE_TRANSFER
             val file = me.cashu.wallet.model.BitchatFilePacket.decode(packet.payload)
             if (file != null) {
                 if (isFileTransfer) {

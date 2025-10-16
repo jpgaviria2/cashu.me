@@ -24,6 +24,13 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = "17"
+    }
 }
 
 repositories {
@@ -53,6 +60,12 @@ dependencies {
     
     // Gson for JSON serialization
     implementation "com.google.code.gson:gson:2.10.1"
+    
+    // Bouncy Castle for Ed25519 signing (Bluetooth mesh crypto)
+    implementation "org.bouncycastle:bcprov-jdk18on:1.77"
+    
+    // AndroidX Security for encrypted storage
+    implementation "androidx.security:security-crypto:1.1.0-alpha06"
 }
 
 apply from: 'capacitor.build.gradle'

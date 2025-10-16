@@ -1015,6 +1015,27 @@ class BluetoothMeshService(private val context: Context) {
     fun getPeerInfo(peerID: String): PeerInfo? {
         return peerManager.getPeerInfo(peerID)
     }
+    
+    /**
+     * Get all peers
+     */
+    fun getAllPeers(): List<PeerInfo> {
+        return peerManager.getAllPeersInfo()
+    }
+    
+    /**
+     * Broadcast a custom packet to all nearby peers
+     */
+    fun broadcastCustomPacket(packet: BitchatPacket) {
+        connectionManager.broadcastPacket(RoutedPacket(packet))
+    }
+    
+    /**
+     * Send a custom packet to a specific peer
+     */
+    fun sendCustomPacketToPeer(peerID: String, packet: BitchatPacket) {
+        connectionManager.sendPacketToPeer(peerID, packet)
+    }
 
     /**
      * Update peer information with verification data

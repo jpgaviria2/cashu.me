@@ -17,59 +17,60 @@
 - ✅ Copied essential model files (BitchatMessage, RoutedPacket, IdentityAnnouncement)
 - ✅ Updated all package declarations from `com.bitchat.android` to `me.cashu.wallet`
 
-## In Progress / Next Steps
+## Phase 1: COMPLETED ✅
+- ✅ Copied all mesh components (17 files)
+- ✅ Copied all protocol components (full directory)
+- ✅ Copied crypto and noise directories
+- ✅ Copied sync directory (GossipSyncManager)
+- ✅ Copied all model files
+- ✅ Copied util directory
+- ✅ Created stub implementations for debug managers
+- ✅ Created stub implementation for FavoritesPersistenceService
+- ✅ Updated all package declarations
 
-### Phase 1: Remaining Tasks
-- ⏳ Copy missing dependencies:
-  - sync/ directory (GossipSyncManager)
-  - Additional model files (BitchatFilePacket, NoisePayload, FragmentPayload, NoiseEncrypted, RequestSyncPacket)
-  - util/ directory
-  - services/ directory (if needed)
-  
-- ⏳ Remove/stub out bitchat-specific UI dependencies:
-  - Debug managers (DebugSettingsManager, DebugPreferenceManager)
-  - Favorites/contacts service (FavoritesPersistenceService)
-  - ChatState and UI references
-  
-- ⏳ Copy protocol files:
-  - BitchatPacket.kt
-  - MessageType.kt
-  - SpecialRecipients.kt
+## Phase 2: COMPLETED ✅
+- ✅ Created EcashMessage.kt model
+- ✅ Implemented binary payload serialization (toBinaryPayload)
+- ✅ Implemented binary payload deserialization (fromBinaryPayload)
+- ✅ Defined DeliveryStatus enum for ecash tracking
 
-### Phase 2: Ecash Token Message Model (Not Started)
-- ⏸️ Create EcashMessage.kt model
-- ⏸️ Implement binary payload serialization/deserialization
-- ⏸️ Define DeliveryStatus enum for ecash
+## Phase 3: COMPLETED ✅
+- ✅ Created BluetoothEcashService.kt wrapper
+- ✅ Updated AndroidManifest.xml with Bluetooth permissions
+- ✅ Updated build.gradle with Kotlin and coroutines dependencies
+- ✅ Added Kotlin plugin configuration
 
-### Phase 3: Bluetooth Service Integration (Not Started)
-- ⏸️ Create BluetoothEcashService.kt wrapper
-- ⏸️ Update AndroidManifest.xml with permissions
-- ⏸️ Update build.gradle with dependencies
+## Phase 4: COMPLETED ✅
+- ✅ Created NearbyContactsDialog.vue for peer selection
+- ✅ Created EcashClaimNotification.vue for received tokens
+- ✅ Added "Send to Nearby" button to WalletPage (Android only)
+- ✅ Integrated claim notification banner
+- ✅ Auto-initialize Bluetooth on app start
 
-### Phase 4: UI Integration (Not Started)
-- ⏸️ Create NearbyContactsDialog.vue
-- ⏸️ Modify SendTokenDialog.vue
-- ⏸️ Create EcashClaimNotification.vue
+## Phase 5: COMPLETED ✅
+- ✅ Created BluetoothEcashPlugin.kt Capacitor plugin
+- ✅ Created bluetooth-ecash.ts TypeScript interface
+- ✅ Created bluetooth.ts Pinia store
+- ✅ Implemented event listeners for real-time updates
+- ✅ Added permission request handling
 
-### Phase 5: Capacitor Plugin Bridge (Not Started)
-- ⏸️ Create BluetoothEcashPlugin.kt
-- ⏸️ Create TypeScript interface
-- ⏸️ Create Pinia store for Bluetooth
+## Phase 6: IN PROGRESS ⏳
+- ⏸️ Implement NIP-02 contact list publishing
+- ⏸️ Add online/offline sync monitoring
+- ⏸️ Auto-sync contacts when internet available
 
-### Phase 6: Nostr Contact List Integration (Not Started)
-- ⏸️ Create bluetoothContacts.ts store
-- ⏸️ Implement automatic contact creation
-- ⏸️ Implement contact list sync
+## Phase 7: PARTIALLY COMPLETE ⏳
+- ✅ Unclaimed tokens stored in Pinia store (using localStorage)
+- ✅ Auto-claim worker implemented in Bluetooth store
+- ⏸️ Background worker for periodic auto-claim
 
-### Phase 7: Offline Token Storage (Not Started)
-- ⏸️ Create unclaimedTokens.ts store
-- ⏸️ Implement auto-claim worker
-
-### Phase 8: Testing & Polish (Not Started)
-- ⏸️ Permission handling
-- ⏸️ Battery optimization
-- ⏸️ Error handling
-- ⏸️ UI/UX polish
+## Phase 8: Next Steps
+- ⏸️ Test build and fix compilation errors
+- ⏸️ Test on physical device
+- ⏸️ Verify mesh networking between devices
+- ⏸️ Add battery optimization
+- ⏸️ Polish UI/UX
+- ⏸️ Add error handling for edge cases
 
 ## Known Issues to Resolve
 

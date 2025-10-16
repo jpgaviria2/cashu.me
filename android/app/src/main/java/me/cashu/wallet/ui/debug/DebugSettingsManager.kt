@@ -22,6 +22,10 @@ class DebugSettingsManager private constructor() {
         // No-op: We don't have debug UI  
     }
     
+    fun logIncomingPacket(packet: Any, fromPeerID: String?) {
+        // No-op: We don't have debug UI
+    }
+    
     companion object {
         @Volatile
         private var instance: DebugSettingsManager? = null

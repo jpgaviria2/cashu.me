@@ -2,13 +2,15 @@ import { registerPlugin } from '@capacitor/core';
 
 /**
  * Peer information from Bluetooth mesh discovery
+ * Maps to PeerInfo from Android PeerManager
  */
 export interface Peer {
-  peerID: string;
+  peerID: string;  // Maps to 'id' field
   nickname: string;
   lastSeen: number;
-  isDirect: boolean;
-  nostrNpub: string;
+  isDirect: boolean;  // Maps to 'isDirectConnection'
+  nostrNpub: string;  // Placeholder - not in native struct
+  isConnected: boolean;
 }
 
 /**

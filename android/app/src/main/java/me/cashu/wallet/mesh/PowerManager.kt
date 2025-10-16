@@ -56,6 +56,14 @@ class PowerManager(private val context: Context) {
     
     var delegate: PowerManagerDelegate? = null
     
+    // Connection limits (exposed as public properties)
+    var maxConnectionsOverall: Int = MAX_CONNECTIONS_NORMAL
+        private set
+    var maxServerConnections: Int = MAX_CONNECTIONS_NORMAL / 2
+        private set
+    var maxClientConnections: Int = MAX_CONNECTIONS_NORMAL / 2
+        private set
+    
     // Battery monitoring
     private val batteryReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -248,6 +256,30 @@ class PowerManager(private val context: Context) {
             val oldMode = currentMode
             currentMode = newMode
             Log.i(TAG, "Power mode changed: $oldMode → $newMode (battery: $batteryLevel%, charging: $isCharging, background: $isAppInBackground)")
+            
+            // Update connection limits based on mode
+            when (newMode) {
+                PowerMode.PERFORMANCE -> {
+                    maxConnectionsOverall = MAX_CONNECTIONS_NORMAL
+                    maxServerConnections = MAX_CONNECTIONS_NORMAL / 2
+                    maxClientConnections = MAX_CONNECTIONS_NORMAL / 2
+                }
+                PowerMode.BALANCED -> {
+                    maxConnectionsOverall = MAX_CONNECTIONS_NORMAL
+                    maxServerConnections = MAX_CONNECTIONS_NORMAL / 2
+                    maxClientConnections = MAX_CONNECTIONS_NORMAL / 2
+                }
+                PowerMode.POWER_SAVER -> {
+                    maxConnectionsOverall = MAX_CONNECTIONS_POWER_SAVE
+                    maxServerConnections = MAX_CONNECTIONS_POWER_SAVE / 2
+                    maxClientConnections = MAX_CONNECTIONS_POWER_SAVE / 2
+                }
+                PowerMode.ULTRA_LOW_POWER -> {
+                    maxConnectionsOverall = MAX_CONNECTIONS_ULTRA_LOW
+                    maxServerConnections = 1
+                    maxClientConnections = 1
+                }
+            }
             
             delegate?.onPowerModeChanged(currentMode)
             

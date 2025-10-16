@@ -16,6 +16,19 @@ class FavoritesPersistenceService private constructor() {
         // TODO: Store peer to npub mapping for contact list
     }
     
+    fun updatePeerFavoritedUs(publicKey: ByteArray, isFavorite: Boolean) {
+        // TODO: Track if peer has favorited us
+    }
+    
+    fun updateNostrPublicKey(publicKey: ByteArray, npub: String) {
+        // TODO: Update nostr public key for peer
+    }
+    
+    fun getFavoriteStatus(publicKey: ByteArray): Boolean {
+        // TODO: Return favorite status
+        return false
+    }
+    
     companion object {
         val shared = FavoritesPersistenceService()
     }
