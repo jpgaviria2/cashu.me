@@ -14,31 +14,31 @@ import kotlinx.coroutines.flow.collect
  * Coordinates smaller, focused components for better maintainability
  */
 class BluetoothConnectionManager(
-    private val context: Context, 
+    private val context: Context,
     private val myPeerID: String,
     private val fragmentManager: FragmentManager? = null
 ) : PowerManagerDelegate {
-    
+
     companion object {
         private const val TAG = "BluetoothConnectionManager"
     }
-    
+
     // Core Bluetooth components
-    private val bluetoothManager: BluetoothManager = 
+    private val bluetoothManager: BluetoothManager =
         context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
     private val bluetoothAdapter: BluetoothAdapter? = bluetoothManager.adapter
-    
+
     // Power management
     private val powerManager = PowerManager(context.applicationContext)
-    
+
     // Coroutines
     private val connectionScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-    
+
     // Component managers
     private val permissionManager = BluetoothPermissionManager(context)
     private val connectionTracker = BluetoothConnectionTracker(connectionScope, powerManager)
     private val packetBroadcaster = BluetoothPacketBroadcaster(connectionScope, connectionTracker, fragmentManager)
-    
+
     // Delegate for component managers to call back to main manager
     private val componentDelegate = object : BluetoothConnectionManagerDelegate {
         override fun onPacketReceived(packet: BitchatPacket, peerID: String, device: BluetoothDevice?) {
@@ -55,7 +55,7 @@ class BluetoothConnectionManager(
 
             delegate?.onPacketReceived(packet, peerID, device)
         }
-        
+
         override fun onDeviceConnected(device: BluetoothDevice) {
             delegate?.onDeviceConnected(device)
         }
@@ -63,28 +63,28 @@ class BluetoothConnectionManager(
         override fun onDeviceDisconnected(device: BluetoothDevice) {
             delegate?.onDeviceDisconnected(device)
         }
-        
+
         override fun onRSSIUpdated(deviceAddress: String, rssi: Int) {
             delegate?.onRSSIUpdated(deviceAddress, rssi)
         }
     }
-    
+
     private val serverManager = BluetoothGattServerManager(
         context, connectionScope, connectionTracker, permissionManager, powerManager, componentDelegate
     )
     private val clientManager = BluetoothGattClientManager(
         context, connectionScope, connectionTracker, permissionManager, powerManager, componentDelegate
     )
-    
+
     // Service state
     private var isActive = false
-    
+
     // Delegate for callbacks
     var delegate: BluetoothConnectionManagerDelegate? = null
-    
+
     // Public property for address-peer mapping
     val addressPeerMap get() = connectionTracker.addressPeerMap
-    
+
     init {
         powerManager.delegate = this
         // Observe debug settings to enforce role state while active
@@ -103,46 +103,26 @@ class BluetoothConnectionManager(
                     if (enabled) startClient() else stopClient()
                 }
             }
-            // Connection caps: enforce on change
-            connectionScope.launch {
-                dbg.maxConnectionsOverall.collect {
-                    if (!isActive) return@collect
-                    connectionTracker.enforceConnectionLimits()
-                    // Also enforce server side best-effort
-                    serverManager.enforceServerLimit(dbg.maxServerConnections.value)
-                }
-            }
-            connectionScope.launch {
-                dbg.maxClientConnections.collect {
-                    if (!isActive) return@collect
-                    connectionTracker.enforceConnectionLimits()
-                }
-            }
-            connectionScope.launch {
-                dbg.maxServerConnections.collect {
-                    if (!isActive) return@collect
-                    serverManager.enforceServerLimit(dbg.maxServerConnections.value)
-                }
-            }
+            // Note: Connection limits are managed by PowerManager directly
         } catch (_: Exception) { }
     }
-    
+
     /**
      * Start all Bluetooth services with power optimization
      */
     fun startServices(): Boolean {
         Log.i(TAG, "Starting power-optimized Bluetooth services...")
-        
+
         if (!permissionManager.hasBluetoothPermissions()) {
             Log.e(TAG, "Missing Bluetooth permissions")
             return false
         }
-        
+
         if (bluetoothAdapter?.isEnabled != true) {
             Log.e(TAG, "Bluetooth is not enabled")
             return false
         }
-        
+
         try {
             isActive = true
 
@@ -160,10 +140,10 @@ class BluetoothConnectionManager(
             connectionScope.launch {
                 // Start connection tracker first
                 connectionTracker.start()
-                
+
                 // Start power manager
                 powerManager.start()
-                
+
                 // Start server/client based on debug settings
                 val dbg = try { me.cashu.wallet.ui.debug.DebugSettingsManager.getInstance() } catch (_: Exception) { null }
                 val startServer = dbg?.gattServerEnabled?.value != false
@@ -188,45 +168,45 @@ class BluetoothConnectionManager(
                 } else {
                     Log.i(TAG, "GATT Client disabled by debug settings; not starting")
                 }
-                
+
                 Log.i(TAG, "Bluetooth services started successfully")
             }
-            
+
             return true
-            
+
         } catch (e: Exception) {
             Log.e(TAG, "Failed to start Bluetooth services: ${e.message}")
             isActive = false
             return false
         }
     }
-    
+
     /**
      * Stop all Bluetooth services with proper cleanup
      */
     fun stopServices() {
         Log.i(TAG, "Stopping power-optimized Bluetooth services")
-        
+
         isActive = false
-        
+
         connectionScope.launch {
             // Stop component managers
             clientManager.stop()
             serverManager.stop()
-            
+
             // Stop power manager
             powerManager.stop()
-            
+
             // Stop connection tracker
             connectionTracker.stop()
-            
+
             // Cancel the coroutine scope
             connectionScope.cancel()
-            
+
             Log.i(TAG, "All Bluetooth services stopped")
         }
     }
-    
+
     /**
      * Set app background state for power optimization
      */
@@ -240,7 +220,7 @@ class BluetoothConnectionManager(
      */
     fun broadcastPacket(routed: RoutedPacket) {
         if (!isActive) return
-        
+
         packetBroadcaster.broadcastPacket(
             routed,
             serverManager.getGattServer(),
@@ -264,7 +244,7 @@ class BluetoothConnectionManager(
             serverManager.getCharacteristic()
         )
     }
-    
+
 
     // Expose role controls for debug UI
     fun startServer() { connectionScope.launch { serverManager.start() } }
@@ -321,7 +301,7 @@ class BluetoothConnectionManager(
      * Get connected device count
      */
     fun getConnectedDeviceCount(): Int = connectionTracker.getConnectedDeviceCount()
-    
+
     /**
      * Get debug information including power management
      */
@@ -339,16 +319,16 @@ class BluetoothConnectionManager(
             appendLine(connectionTracker.getDebugInfo())
         }
     }
-    
+
     // MARK: - PowerManagerDelegate Implementation
-    
+
     override fun onPowerModeChanged(newMode: PowerManager.PowerMode) {
         Log.i(TAG, "Power mode changed to: $newMode")
-        
+
         connectionScope.launch {
             // Avoid rapid scan restarts by checking if we need to change scan behavior
             val wasUsingDutyCycle = powerManager.shouldUseDutyCycle()
-            
+
             // Update advertising with new power settings if server enabled
             val serverEnabled = try { me.cashu.wallet.ui.debug.DebugSettingsManager.getInstance().gattServerEnabled.value } catch (_: Exception) { true }
             if (serverEnabled) {
@@ -356,7 +336,7 @@ class BluetoothConnectionManager(
             } else {
                 serverManager.stop()
             }
-            
+
             // Only restart scanning if the duty cycle behavior changed
             val nowUsingDutyCycle = powerManager.shouldUseDutyCycle()
             if (wasUsingDutyCycle != nowUsingDutyCycle) {
@@ -370,21 +350,21 @@ class BluetoothConnectionManager(
             } else {
                 Log.d(TAG, "Duty cycle behavior unchanged, keeping existing scan state")
             }
-            
+
             // Enforce connection limits
             connectionTracker.enforceConnectionLimits()
             // Best-effort server cap
             try {
-                val maxServer = me.cashu.wallet.ui.debug.DebugSettingsManager.getInstance().maxServerConnections.value
+                val maxServer = powerManager.maxServerConnections
                 serverManager.enforceServerLimit(maxServer)
             } catch (_: Exception) { }
         }
     }
-    
+
     override fun onScanStateChanged(shouldScan: Boolean) {
         clientManager.onScanStateChanged(shouldScan)
     }
-    
+
     // MARK: - Private Implementation - All moved to component managers
 }
 

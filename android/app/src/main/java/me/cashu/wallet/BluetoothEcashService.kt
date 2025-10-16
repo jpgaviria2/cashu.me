@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 /**
  * BluetoothEcashService - High-level service for sending/receiving ecash tokens via Bluetooth mesh
- * 
+ *
  * This wraps BluetoothMeshService and provides ecash-specific functionality:
  * - Send tokens to nearby peers or broadcast
  * - Receive tokens and store for claiming
@@ -25,26 +25,26 @@ import java.util.concurrent.ConcurrentHashMap
  * - Manage delivery status and notifications
  */
 class BluetoothEcashService(private val context: Context) {
-    
+
     companion object {
         private const val TAG = "BluetoothEcashService"
         private const val ECASH_MESSAGE_TYPE: UByte = 0xE1u  // Custom message type for ecash
     }
-    
+
     private val meshService = BluetoothMeshService(context)
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-    
+
     // Ecash-specific state
     private val pendingTokens = ConcurrentHashMap<String, EcashMessage>()
     private val receivedTokens = ConcurrentHashMap<String, EcashMessage>()
-    
+
     // Delegate for callbacks to UI
     var delegate: EcashDelegate? = null
-    
+
     init {
         setupMeshDelegate()
     }
-    
+
     /**
      * Wire up the mesh service delegate to handle incoming packets
      */
@@ -55,7 +55,7 @@ class BluetoothEcashService(private val context: Context) {
                 // Check if message content contains ecash token
                 Log.d(TAG, "Received message: ${message.content.take(50)}")
             }
-            
+
             override fun didUpdatePeerList(peers: List<String>) {
                 Log.d(TAG, "Peer list updated: ${peers.size} peers")
                 // Get full peer info and notify delegate
@@ -65,37 +65,47 @@ class BluetoothEcashService(private val context: Context) {
                     }
                 }
             }
-            
+
             override fun didReceiveChannelLeave(channel: String, fromPeer: String) {
                 // Not used for ecash - channels are for group chat
             }
-            
+
             override fun didReceiveDeliveryAck(messageID: String, recipientPeerID: String) {
                 Log.d(TAG, "Delivery ack for message $messageID from $recipientPeerID")
                 delegate?.onTokenDelivered(messageID, recipientPeerID)
             }
-            
+
             override fun didReceiveReadReceipt(messageID: String, recipientPeerID: String) {
                 Log.d(TAG, "Read receipt for message $messageID from $recipientPeerID")
             }
-            
+
             override fun decryptChannelMessage(encryptedContent: ByteArray, channel: String): String? {
                 // Not used for ecash
                 return null
             }
-            
+
             override fun getNickname(): String? {
                 // TODO: Get from user profile
                 return "Trails User"
             }
-            
+
             override fun isFavorite(peerID: String): Boolean {
                 // All peers are treated equally for ecash
                 return false
             }
+
+            override fun didReceiveCustomPacket(packet: BitchatPacket, fromPeerID: String?, relayAddress: String?) {
+                // Check if this is an ecash packet (type 0xE1)
+                if (packet.type == ECASH_MESSAGE_TYPE) {
+                    Log.i(TAG, "Received ecash packet from ${fromPeerID ?: "broadcast"}")
+                    handleIncomingEcashPacket(packet, fromPeerID, relayAddress)
+                } else {
+                    Log.d(TAG, "Received unknown custom packet type: 0x${packet.type.toString(16)}")
+                }
+            }
         }
     }
-    
+
     /**
      * Start the Bluetooth mesh service
      * Begins advertising and scanning for nearby peers
@@ -104,7 +114,7 @@ class BluetoothEcashService(private val context: Context) {
         Log.i(TAG, "Starting Bluetooth ecash service")
         meshService.startServices()
     }
-    
+
     /**
      * Stop the Bluetooth mesh service
      */
@@ -112,10 +122,10 @@ class BluetoothEcashService(private val context: Context) {
         Log.i(TAG, "Stopping Bluetooth ecash service")
         meshService.stopServices()
     }
-    
+
     /**
      * Send ecash token to specific peer(s) via Bluetooth mesh
-     * 
+     *
      * @param token Base64-encoded Cashu token
      * @param amount Amount in base units
      * @param unit Currency unit ("sat" or "point")
@@ -147,10 +157,10 @@ class BluetoothEcashService(private val context: Context) {
             deliveryStatus = DeliveryStatus.Sending,
             recipientNpub = peerID  // peerID can be used as recipient identifier
         )
-        
+
         // Store in pending tokens
         pendingTokens[message.id] = message
-        
+
         // Convert to binary payload
         val payload = message.toBinaryPayload()
         if (payload == null) {
@@ -158,15 +168,19 @@ class BluetoothEcashService(private val context: Context) {
             delegate?.onTokenSendFailed(message.id, "Serialization failed")
             return message.id
         }
-        
+
         // Create BitchatPacket with custom ecash type
+        val recipientIDBytes = if (peerID != null) hexToBytes(peerID) else null
         val packet = BitchatPacket(
+            version = 1u,
             type = ECASH_MESSAGE_TYPE,
-            ttl = 7u,  // Max hops for mesh relay
-            senderID = meshService.myPeerID,
-            payload = payload
+            senderID = hexToBytes(meshService.myPeerID),
+            recipientID = recipientIDBytes,
+            timestamp = System.currentTimeMillis().toULong(),
+            payload = payload,
+            ttl = 7u  // Max hops for mesh relay
         )
-        
+
         serviceScope.launch {
             try {
                 if (peerID != null) {
@@ -178,21 +192,21 @@ class BluetoothEcashService(private val context: Context) {
                     Log.d(TAG, "Broadcasting ecash token: ${amount} ${unit}")
                     meshService.broadcastCustomPacket(packet)
                 }
-                
+
                 // Update status
                 val updatedMessage = message.copy(deliveryStatus = DeliveryStatus.Sent)
                 pendingTokens[message.id] = updatedMessage
                 delegate?.onTokenSent(message.id)
-                
+
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to send ecash token", e)
                 delegate?.onTokenSendFailed(message.id, e.message ?: "Unknown error")
             }
         }
-        
+
         return message.id
     }
-    
+
     /**
      * Broadcast ecash token to all nearby peers (for kids without specific contacts)
      */
@@ -206,21 +220,21 @@ class BluetoothEcashService(private val context: Context) {
     ): String {
         return sendEcashToken(token, amount, unit, mint, null, memo, senderNpub)
     }
-    
+
     /**
      * Get list of currently available peers
      */
     fun getAvailablePeers(): List<PeerInfo> {
         return meshService.getAllPeers()
     }
-    
+
     /**
      * Get unclaimed tokens received via Bluetooth
      */
     fun getUnclaimedTokens(): List<EcashMessage> {
         return receivedTokens.values.filter { !it.claimed }.toList()
     }
-    
+
     /**
      * Mark a token as claimed after successful redemption with mint
      */
@@ -234,7 +248,7 @@ class BluetoothEcashService(private val context: Context) {
             Log.d(TAG, "Token ${messageId} marked as claimed")
         }
     }
-    
+
     /**
      * Handle incoming ecash packet from mesh network
      */
@@ -250,20 +264,20 @@ class BluetoothEcashService(private val context: Context) {
                     Log.e(TAG, "Failed to parse ecash message from packet")
                     return@launch
                 }
-                
+
                 Log.i(TAG, "Received ecash token: ${message.amount} ${message.unit} from ${message.sender}")
-                
+
                 // Check if this is for us or if we should relay it
-                val isForUs = message.recipientNpub == null || 
+                val isForUs = message.recipientNpub == null ||
                               message.recipientNpub == getCurrentUserNpub()
-                
+
                 if (isForUs) {
                     // Store the token for claiming
                     receivedTokens[message.id] = message
-                    
+
                     // Notify delegate
                     delegate?.onEcashReceived(message)
-                    
+
                     // If from a peer, update delivery status
                     fromPeerID?.let { peerID ->
                         val updatedMessage = message.copy(
@@ -273,13 +287,13 @@ class BluetoothEcashService(private val context: Context) {
                         delegate?.onTokenDelivered(message.id, peerID)
                     }
                 }
-                
+
             } catch (e: Exception) {
                 Log.e(TAG, "Error handling incoming ecash packet", e)
             }
         }
     }
-    
+
     /**
      * Get current user's Nostr npub
      * TODO: Integrate with cashu.me's Nostr identity management
@@ -288,13 +302,28 @@ class BluetoothEcashService(private val context: Context) {
         // TODO: Get from SharedPreferences or cashu.me's nostr store
         return null
     }
-    
+
     /**
      * Cleanup resources
      */
     fun destroy() {
         serviceScope.cancel()
         meshService.stopServices()
+    }
+
+    /**
+     * Convert hex string to byte array
+     */
+    private fun hexToBytes(hex: String): ByteArray {
+        val clean = if (hex.length % 2 == 0) hex else "0$hex"
+        val out = ByteArray(clean.length / 2)
+        var i = 0
+        while (i < clean.length) {
+            val b = clean.substring(i, i + 2).toInt(16).toByte()
+            out[i / 2] = b
+            i += 2
+        }
+        return out
     }
 }
 
@@ -306,27 +335,27 @@ interface EcashDelegate {
      * Called when an ecash token is received via Bluetooth
      */
     fun onEcashReceived(message: EcashMessage)
-    
+
     /**
      * Called when a new peer is discovered nearby
      */
     fun onPeerDiscovered(peer: PeerInfo)
-    
+
     /**
      * Called when a peer disconnects
      */
     fun onPeerLost(peerID: String)
-    
+
     /**
      * Called when a token is successfully sent
      */
     fun onTokenSent(messageId: String)
-    
+
     /**
      * Called when a token send fails
      */
     fun onTokenSendFailed(messageId: String, reason: String)
-    
+
     /**
      * Called when a token is delivered to a peer
      */

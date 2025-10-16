@@ -19,7 +19,7 @@ import me.cashu.wallet.mesh.PeerInfo
 
 /**
  * Capacitor plugin to expose Bluetooth ecash functionality to JavaScript
- * 
+ *
  * This bridges the BluetoothEcashService (Kotlin) to the Vue/Quasar frontend (TypeScript)
  */
 @CapacitorPlugin(
@@ -35,18 +35,18 @@ import me.cashu.wallet.mesh.PeerInfo
     ]
 )
 class BluetoothEcashPlugin : Plugin() {
-    
+
     companion object {
         private const val TAG = "BluetoothEcashPlugin"
         private const val PERMISSION_REQUEST_CODE = 12345
     }
-    
+
     private var bluetoothService: BluetoothEcashService? = null
-    
+
     override fun load() {
         super.load()
         Log.d(TAG, "BluetoothEcashPlugin loaded")
-        
+
         // Initialize service
         bluetoothService = BluetoothEcashService(context).apply {
             delegate = object : EcashDelegate {
@@ -54,26 +54,26 @@ class BluetoothEcashPlugin : Plugin() {
                     Log.d(TAG, "Ecash received: ${message.amount} ${message.unit}")
                     notifyListeners("ecashReceived", ecashMessageToJSObject(message))
                 }
-                
+
                 override fun onPeerDiscovered(peer: PeerInfo) {
                     Log.d(TAG, "Peer discovered: ${peer.id}")
                     notifyListeners("peerDiscovered", peerToJSObject(peer))
                 }
-                
+
                 override fun onPeerLost(peerID: String) {
                     Log.d(TAG, "Peer lost: $peerID")
                     val ret = JSObject()
                     ret.put("peerID", peerID)
                     notifyListeners("peerLost", ret)
                 }
-                
+
                 override fun onTokenSent(messageId: String) {
                     Log.d(TAG, "Token sent: $messageId")
                     val ret = JSObject()
                     ret.put("messageId", messageId)
                     notifyListeners("tokenSent", ret)
                 }
-                
+
                 override fun onTokenSendFailed(messageId: String, reason: String) {
                     Log.e(TAG, "Token send failed: $messageId - $reason")
                     val ret = JSObject()
@@ -81,7 +81,7 @@ class BluetoothEcashPlugin : Plugin() {
                     ret.put("reason", reason)
                     notifyListeners("tokenSendFailed", ret)
                 }
-                
+
                 override fun onTokenDelivered(messageId: String, peerID: String) {
                     Log.d(TAG, "Token delivered: $messageId to $peerID")
                     val ret = JSObject()
@@ -92,7 +92,7 @@ class BluetoothEcashPlugin : Plugin() {
             }
         }
     }
-    
+
     /**
      * Start the Bluetooth mesh service
      */
@@ -104,7 +104,7 @@ class BluetoothEcashPlugin : Plugin() {
                 call.reject("Bluetooth permissions not granted")
                 return
             }
-            
+
             bluetoothService?.start()
             call.resolve()
             Log.i(TAG, "Bluetooth service started")
@@ -113,7 +113,7 @@ class BluetoothEcashPlugin : Plugin() {
             call.reject("Failed to start service: ${e.message}")
         }
     }
-    
+
     /**
      * Stop the Bluetooth mesh service
      */
@@ -128,10 +128,73 @@ class BluetoothEcashPlugin : Plugin() {
             call.reject("Failed to stop service: ${e.message}")
         }
     }
-    
+
+    /**
+     * Check if Bluetooth is enabled on the device
+     */
+    @PluginMethod
+    fun isBluetoothEnabled(call: PluginCall) {
+        try {
+            val bluetoothManager = context.getSystemService(android.content.Context.BLUETOOTH_SERVICE) as? android.bluetooth.BluetoothManager
+            val bluetoothAdapter = bluetoothManager?.adapter
+            val isEnabled = bluetoothAdapter?.isEnabled == true
+
+            val ret = JSObject()
+            ret.put("enabled", isEnabled)
+            call.resolve(ret)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to check Bluetooth status", e)
+            call.reject("Failed to check Bluetooth status: ${e.message}")
+        }
+    }
+
+    /**
+     * Prompt user to enable Bluetooth
+     */
+    @PluginMethod
+    fun requestBluetoothEnable(call: PluginCall) {
+        try {
+            val bluetoothManager = context.getSystemService(android.content.Context.BLUETOOTH_SERVICE) as? android.bluetooth.BluetoothManager
+            val bluetoothAdapter = bluetoothManager?.adapter
+
+            if (bluetoothAdapter == null) {
+                call.reject("Bluetooth not supported on this device")
+                return
+            }
+
+            if (bluetoothAdapter.isEnabled) {
+                val ret = JSObject()
+                ret.put("enabled", true)
+                call.resolve(ret)
+                return
+            }
+
+            // Request to enable Bluetooth
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                // Android 12+ requires BLUETOOTH_CONNECT permission
+                if (ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT)
+                    != PackageManager.PERMISSION_GRANTED) {
+                    call.reject("BLUETOOTH_CONNECT permission not granted")
+                    return
+                }
+            }
+
+            val enableBtIntent = android.content.Intent(android.bluetooth.BluetoothAdapter.ACTION_REQUEST_ENABLE)
+            enableBtIntent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(enableBtIntent)
+
+            val ret = JSObject()
+            ret.put("requested", true)
+            call.resolve(ret)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to request Bluetooth enable", e)
+            call.reject("Failed to request Bluetooth enable: ${e.message}")
+        }
+    }
+
     /**
      * Send ecash token to nearby peer(s)
-     * 
+     *
      * @param token Base64-encoded Cashu token
      * @param amount Amount in base units
      * @param unit Currency unit ("sat" or "point")
@@ -142,11 +205,14 @@ class BluetoothEcashPlugin : Plugin() {
      */
     @PluginMethod
     fun sendToken(call: PluginCall) {
+        Log.d(TAG, "🚀 sendToken called from frontend")
         try {
             val token = call.getString("token") ?: run {
+                Log.e(TAG, "❌ Token is required but not provided")
                 call.reject("Token is required")
                 return
             }
+            Log.d(TAG, "📦 Token received: ${token.take(50)}...")
             val amount = call.getInt("amount") ?: run {
                 call.reject("Amount is required")
                 return
@@ -162,25 +228,25 @@ class BluetoothEcashPlugin : Plugin() {
                 call.reject("Sender npub is required")
                 return
             }
-            
+
             val messageId = bluetoothService?.sendEcashToken(
                 token, amount, unit, mint, peerID, memo, senderNpub
             ) ?: run {
                 call.reject("Service not initialized")
                 return
             }
-            
+
             val ret = JSObject()
             ret.put("messageId", messageId)
             call.resolve(ret)
-            
+
             Log.d(TAG, "Initiated ecash send: $messageId")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to send token", e)
             call.reject("Failed to send token: ${e.message}")
         }
     }
-    
+
     /**
      * Get list of currently available peers
      */
@@ -188,23 +254,23 @@ class BluetoothEcashPlugin : Plugin() {
     fun getAvailablePeers(call: PluginCall) {
         try {
             val peers = bluetoothService?.getAvailablePeers() ?: emptyList()
-            
+
             val peersArray = JSArray()
             peers.forEach { peer ->
                 peersArray.put(peerToJSObject(peer))
             }
-            
+
             val ret = JSObject()
             ret.put("peers", peersArray)
             call.resolve(ret)
-            
+
             Log.d(TAG, "Returned ${peers.size} available peers")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to get peers", e)
             call.reject("Failed to get peers: ${e.message}")
         }
     }
-    
+
     /**
      * Get unclaimed tokens received via Bluetooth
      */
@@ -212,23 +278,23 @@ class BluetoothEcashPlugin : Plugin() {
     fun getUnclaimedTokens(call: PluginCall) {
         try {
             val tokens = bluetoothService?.getUnclaimedTokens() ?: emptyList()
-            
+
             val tokensArray = JSArray()
             tokens.forEach { token ->
                 tokensArray.put(ecashMessageToJSObject(token))
             }
-            
+
             val ret = JSObject()
             ret.put("tokens", tokensArray)
             call.resolve(ret)
-            
+
             Log.d(TAG, "Returned ${tokens.size} unclaimed tokens")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to get unclaimed tokens", e)
             call.reject("Failed to get unclaimed tokens: ${e.message}")
         }
     }
-    
+
     /**
      * Mark a token as claimed after successful redemption
      */
@@ -239,17 +305,17 @@ class BluetoothEcashPlugin : Plugin() {
                 call.reject("Message ID is required")
                 return
             }
-            
+
             bluetoothService?.markTokenClaimed(messageId)
             call.resolve()
-            
+
             Log.d(TAG, "Marked token as claimed: $messageId")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to mark token claimed", e)
             call.reject("Failed to mark token claimed: ${e.message}")
         }
     }
-    
+
     /**
      * Request Bluetooth permissions
      */
@@ -261,15 +327,15 @@ class BluetoothEcashPlugin : Plugin() {
             call.resolve(ret)
             return
         }
-        
+
         // Save call for permission result callback
         savedCall = call
-        
+
         // Request permissions
         val permissions = getRequiredPermissions()
         ActivityCompat.requestPermissions(activity, permissions, PERMISSION_REQUEST_CODE)
     }
-    
+
     /**
      * Check if all required permissions are granted
      */
@@ -279,7 +345,7 @@ class BluetoothEcashPlugin : Plugin() {
             ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
         }
     }
-    
+
     /**
      * Get list of required permissions based on Android version
      */
@@ -300,7 +366,7 @@ class BluetoothEcashPlugin : Plugin() {
             )
         }
     }
-    
+
     /**
      * Convert PeerInfo to JSObject for JavaScript
      */
@@ -314,7 +380,7 @@ class BluetoothEcashPlugin : Plugin() {
         obj.put("isConnected", peer.isConnected)
         return obj
     }
-    
+
     /**
      * Convert EcashMessage to JSObject for JavaScript
      */
@@ -333,9 +399,9 @@ class BluetoothEcashPlugin : Plugin() {
         obj.put("deliveryStatus", message.deliveryStatus.getDisplayText())
         return obj
     }
-    
+
     private var savedCall: PluginCall? = null
-    
+
     override fun handleOnDestroy() {
         bluetoothService?.destroy()
         super.handleOnDestroy()

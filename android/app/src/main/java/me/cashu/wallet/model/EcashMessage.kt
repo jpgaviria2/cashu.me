@@ -8,7 +8,7 @@ import java.util.*
 
 /**
  * EcashMessage - Represents a Cashu ecash token transfer over Bluetooth mesh
- * 
+ *
  * This extends the BitchatMessage concept but specifically for ecash token transfers.
  * Tokens are transmitted as base64-encoded Cashu tokens with metadata.
  */
@@ -30,7 +30,7 @@ data class EcashMessage(
 
     /**
      * Convert ecash message to binary payload for Bluetooth transmission
-     * 
+     *
      * Binary format:
      * - Flags: 1 byte (memo, claimed, recipient)
      * - Timestamp: 8 bytes (milliseconds since epoch, big-endian)

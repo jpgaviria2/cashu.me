@@ -50,7 +50,7 @@
           <ReceiveDialog v-model="showReceiveDialog" />
           <SendDialog v-model="showSendDialog" />
         </div>
-        
+
         <!-- Bluetooth Nearby Sending (Android only) -->
         <div v-if="isNativeApp" class="row justify-center q-mt-sm q-mb-md">
           <q-btn
@@ -64,7 +64,7 @@
             <span>Send to Nearby</span>
           </q-btn>
         </div>
-        
+
         <!-- Nearby Contacts Dialog -->
         <q-dialog v-model="showNearbyDialog" position="bottom">
           <q-card style="width: 100%; max-width: 600px;">
@@ -74,7 +74,7 @@
             </q-card-actions>
           </q-card>
         </q-dialog>
-        
+
         <!-- ///////////////////////////////////////////
       ////////////////// TABLES /////////////////
       /////////////////////////////////////////// -->
@@ -686,7 +686,7 @@ export default {
         console.log('Skipping Bluetooth init - not a native app');
         return;
       }
-      
+
       try {
         const bluetoothStore = useBluetoothStore();
         await bluetoothStore.initialize();

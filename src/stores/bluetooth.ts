@@ -8,7 +8,7 @@ import { notifySuccess, notifyError, notifyWarning } from 'src/js/notify';
 
 /**
  * Bluetooth Mesh Ecash Store
- * 
+ *
  * Manages Bluetooth mesh networking for offline ecash token transfers
  */
 export const useBluetoothStore = defineStore('bluetooth', {
@@ -20,7 +20,7 @@ export const useBluetoothStore = defineStore('bluetooth', {
     contacts: useLocalStorage<BluetoothContact[]>('bluetooth-contacts', []),
     pendingMessages: [] as string[],  // Message IDs being sent
   }),
-  
+
   getters: {
     /**
      * Get peers sorted by last seen (most recent first)
@@ -28,28 +28,28 @@ export const useBluetoothStore = defineStore('bluetooth', {
     sortedPeers: (state) => {
       return [...state.nearbyPeers].sort((a, b) => b.lastSeen - a.lastSeen);
     },
-    
+
     /**
      * Get only directly connected peers (not via relay)
      */
     directPeers: (state) => {
       return state.nearbyPeers.filter(p => p.isDirect);
     },
-    
+
     /**
      * Get peers with known Nostr identities
      */
     knownPeers: (state) => {
       return state.nearbyPeers.filter(p => p.nostrNpub && p.nostrNpub.length > 0);
     },
-    
+
     /**
      * Get count of unclaimed tokens
      */
     unclaimedCount: (state) => {
       return state.unclaimedTokens.filter(t => !t.claimed).length;
     },
-    
+
     /**
      * Total value of unclaimed tokens (in sats)
      */
@@ -59,14 +59,14 @@ export const useBluetoothStore = defineStore('bluetooth', {
         .reduce((sum, t) => sum + t.amount, 0);
     },
   },
-  
+
   actions: {
     /**
      * Initialize the Bluetooth service and event listeners
      */
     async initialize() {
       if (this.isInitialized) return;
-      
+
       try {
         // Check if running as native app
         // @ts-ignore
@@ -74,40 +74,40 @@ export const useBluetoothStore = defineStore('bluetooth', {
           console.log('Bluetooth mesh not available - not running as native app');
           return;
         }
-        
+
         // Set up event listeners
         await BluetoothEcash.addListener('ecashReceived', (event: EcashMessage) => {
           console.log('Ecash received via Bluetooth:', event);
           this.handleEcashReceived(event);
         });
-        
+
         await BluetoothEcash.addListener('peerDiscovered', (event: { peerID: string; nickname: string; lastSeen: number; isDirect: boolean; nostrNpub: string }) => {
           console.log('Peer discovered:', event);
           this.handlePeerDiscovered(event as Peer);
         });
-        
+
         await BluetoothEcash.addListener('peerLost', (event: { peerID: string }) => {
           console.log('Peer lost:', event);
           this.handlePeerLost(event.peerID);
         });
-        
+
         await BluetoothEcash.addListener('tokenSent', (event: { messageId: string }) => {
           console.log('Token sent:', event);
           this.handleTokenSent(event.messageId);
         });
-        
+
         await BluetoothEcash.addListener('tokenDelivered', (event: { messageId: string; peerID: string }) => {
           console.log('Token delivered:', event);
           this.handleTokenDelivered(event.messageId, event.peerID);
         });
-        
+
         this.isInitialized = true;
         console.log('Bluetooth ecash service initialized');
       } catch (e) {
         console.error('Failed to initialize Bluetooth service:', e);
       }
     },
-    
+
     /**
      * Start Bluetooth mesh service
      */
@@ -119,14 +119,14 @@ export const useBluetoothStore = defineStore('bluetooth', {
           notifyWarning('Bluetooth permissions required for nearby payments');
           return false;
         }
-        
+
         await BluetoothEcash.startService();
         this.isActive = true;
         console.log('Bluetooth mesh service started');
-        
+
         // Start polling for peers
         this.startPeerPolling();
-        
+
         return true;
       } catch (e) {
         console.error('Failed to start Bluetooth service:', e);
@@ -134,7 +134,7 @@ export const useBluetoothStore = defineStore('bluetooth', {
         return false;
       }
     },
-    
+
     /**
      * Stop Bluetooth mesh service
      */
@@ -148,7 +148,7 @@ export const useBluetoothStore = defineStore('bluetooth', {
         console.error('Failed to stop Bluetooth service:', e);
       }
     },
-    
+
     /**
      * Send ecash token to nearby peer(s)
      */
@@ -163,7 +163,7 @@ export const useBluetoothStore = defineStore('bluetooth', {
         return null;
       }
     },
-    
+
     /**
      * Claim a received token
      */
@@ -173,26 +173,26 @@ export const useBluetoothStore = defineStore('bluetooth', {
         if (!message) {
           throw new Error('Token not found');
         }
-        
+
         // Use wallet store to receive the token
         const walletStore = useWalletStore();
         const receiveStore = useReceiveTokensStore();
-        
+
         receiveStore.receiveData.tokensBase64 = message.cashuToken;
         const success = await receiveStore.receiveIfDecodes();
-        
+
         if (success) {
           // Mark as claimed
           await BluetoothEcash.markTokenClaimed({ messageId });
-          
+
           const index = this.unclaimedTokens.findIndex(t => t.id === messageId);
           if (index !== -1) {
             this.unclaimedTokens[index] = { ...message, claimed: true };
           }
-          
+
           // Add sender to contacts
           this.addContact(message.sender, message.senderPeerID);
-          
+
           notifySuccess(`Claimed ${message.amount} ${message.unit} from ${message.sender.substring(0, 16)}...`);
           return true;
         } else {
@@ -204,7 +204,7 @@ export const useBluetoothStore = defineStore('bluetooth', {
         return false;
       }
     },
-    
+
     /**
      * Auto-claim all unclaimed tokens (when online)
      */
@@ -213,17 +213,17 @@ export const useBluetoothStore = defineStore('bluetooth', {
         console.log('Offline - skipping auto-claim');
         return;
       }
-      
+
       const unclaimed = this.unclaimedTokens.filter(t => !t.claimed);
       console.log(`Auto-claiming ${unclaimed.length} tokens`);
-      
+
       for (const token of unclaimed) {
         await this.claimToken(token.id);
         // Small delay between claims
         await new Promise(resolve => setTimeout(resolve, 500));
       }
     },
-    
+
     /**
      * Handle ecash received event
      */
@@ -232,17 +232,17 @@ export const useBluetoothStore = defineStore('bluetooth', {
       const existing = this.unclaimedTokens.find(t => t.id === message.id);
       if (!existing) {
         this.unclaimedTokens.push(message);
-        
+
         // Show notification
         notifySuccess(`Received ${message.amount} ${message.unit} via Bluetooth!`, message.memo || 'From nearby peer');
-        
+
         // Try to auto-claim if online
         if (navigator.onLine) {
           this.claimToken(message.id);
         }
       }
     },
-    
+
     /**
      * Handle peer discovered event
      */
@@ -257,7 +257,7 @@ export const useBluetoothStore = defineStore('bluetooth', {
         this.nearbyPeers[index] = peer;
       }
     },
-    
+
     /**
      * Handle peer lost event
      */
@@ -268,7 +268,7 @@ export const useBluetoothStore = defineStore('bluetooth', {
         console.log(`Peer lost: ${peerID}`);
       }
     },
-    
+
     /**
      * Handle token sent event
      */
@@ -278,7 +278,7 @@ export const useBluetoothStore = defineStore('bluetooth', {
         this.pendingMessages.splice(index, 1);
       }
     },
-    
+
     /**
      * Handle token delivered event
      */
@@ -286,22 +286,22 @@ export const useBluetoothStore = defineStore('bluetooth', {
       console.log(`Token ${messageId} delivered to ${peerID}`);
       // Could update UI to show delivery confirmation
     },
-    
+
     /**
      * Poll for available peers periodically
      */
     async startPeerPolling() {
       if (!this.isActive) return;
-      
+
       const poll = async () => {
         if (!this.isActive) return;
-        
+
         try {
           const { peers } = await BluetoothEcash.getAvailablePeers();
-          
+
           // Update peer list
           this.nearbyPeers = peers;
-          
+
           // Poll again in 5 seconds
           setTimeout(poll, 5000);
         } catch (e) {
@@ -309,10 +309,10 @@ export const useBluetoothStore = defineStore('bluetooth', {
           setTimeout(poll, 10000);  // Retry slower on error
         }
       };
-      
+
       poll();
     },
-    
+
     /**
      * Add a contact after ecash exchange
      */
@@ -327,7 +327,7 @@ export const useBluetoothStore = defineStore('bluetooth', {
           nickname: '',
         });
         console.log(`Added contact: ${npub}`);
-        
+
         // Sync to Nostr when online
         if (navigator.onLine) {
           this.syncContactsToNostr();
@@ -338,7 +338,7 @@ export const useBluetoothStore = defineStore('bluetooth', {
         this.contacts[index].lastInteraction = Date.now();
       }
     },
-    
+
     /**
      * Sync contacts to Nostr contact list (NIP-02)
      */

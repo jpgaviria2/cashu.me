@@ -16,15 +16,15 @@ import kotlin.math.max
  * Adjusts scanning, advertising, and connection behavior based on battery state
  */
 class PowerManager(private val context: Context) {
-    
+
     companion object {
         private const val TAG = "PowerManager"
-        
+
         // Battery thresholds
         private const val CRITICAL_BATTERY = 10
         private const val LOW_BATTERY = 20
         private const val MEDIUM_BATTERY = 50
-        
+
         // Scan duty cycle periods (ms)
         private const val SCAN_ON_DURATION_NORMAL = 8000L    // 8 seconds on
         private const val SCAN_OFF_DURATION_NORMAL = 2000L   // 2 seconds off
@@ -32,30 +32,30 @@ class PowerManager(private val context: Context) {
         private const val SCAN_OFF_DURATION_POWER_SAVE = 8000L  // 8 seconds off
         private const val SCAN_ON_DURATION_ULTRA_LOW = 1000L      // 1 second on
         private const val SCAN_OFF_DURATION_ULTRA_LOW = 10000L   // 10 seconds off
-        
+
         // Connection limits
         private const val MAX_CONNECTIONS_NORMAL = 8
         private const val MAX_CONNECTIONS_POWER_SAVE = 4
         private const val MAX_CONNECTIONS_ULTRA_LOW = 2
     }
-    
+
     enum class PowerMode {
         PERFORMANCE,    // Full power, no restrictions
         BALANCED,       // Moderate power saving
         POWER_SAVER,    // Aggressive power saving
         ULTRA_LOW_POWER // Minimal operations only
     }
-    
+
     private var currentMode = PowerMode.BALANCED
     private var isCharging = false
     private var batteryLevel = 100
     private var isAppInBackground = false
-    
+
     private val powerScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var dutyCycleJob: Job? = null
-    
+
     var delegate: PowerManagerDelegate? = null
-    
+
     // Connection limits (exposed as public properties)
     var maxConnectionsOverall: Int = MAX_CONNECTIONS_NORMAL
         private set
@@ -63,7 +63,7 @@ class PowerManager(private val context: Context) {
         private set
     var maxClientConnections: Int = MAX_CONNECTIONS_NORMAL / 2
         private set
-    
+
     // Battery monitoring
     private val batteryReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -74,11 +74,11 @@ class PowerManager(private val context: Context) {
                     if (level != -1 && scale != -1) {
                         batteryLevel = (level * 100) / scale
                     }
-                    
+
                     val status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
                     isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
                                 status == BatteryManager.BATTERY_STATUS_FULL
-                    
+
                     updatePowerMode()
                 }
                 Intent.ACTION_POWER_CONNECTED -> {
@@ -92,23 +92,23 @@ class PowerManager(private val context: Context) {
             }
         }
     }
-    
+
     init {
         registerBatteryReceiver()
         updatePowerMode()
     }
-    
+
     fun start() {
         Log.i(TAG, "Starting power management")
         startDutyCycle()
     }
-    
+
     fun stop() {
         Log.i(TAG, "Stopping power management")
         powerScope.cancel()
         unregisterBatteryReceiver()
     }
-    
+
     fun setAppBackgroundState(inBackground: Boolean) {
         if (isAppInBackground != inBackground) {
             isAppInBackground = inBackground
@@ -116,7 +116,7 @@ class PowerManager(private val context: Context) {
             updatePowerMode()
         }
     }
-    
+
     /**
      * Get scan settings optimized for current power mode
      */
@@ -148,7 +148,7 @@ class PowerManager(private val context: Context) {
 
         return builder.setReportDelay(0).build()
     }
-    
+
     /**
      * Get advertising settings optimized for current power mode
      */
@@ -160,21 +160,21 @@ class PowerManager(private val context: Context) {
                 .setConnectable(true)
                 .setTimeout(0)
                 .build()
-                
+
             PowerMode.BALANCED -> AdvertiseSettings.Builder()
                 .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_BALANCED)
                 .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_MEDIUM)
                 .setConnectable(true)
                 .setTimeout(0)
                 .build()
-                
+
             PowerMode.POWER_SAVER -> AdvertiseSettings.Builder()
                 .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_POWER)
                 .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_LOW)
                 .setConnectable(true)
                 .setTimeout(0)
                 .build()
-                
+
             PowerMode.ULTRA_LOW_POWER -> AdvertiseSettings.Builder()
                 .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_POWER)
                 .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_ULTRA_LOW)
@@ -183,7 +183,7 @@ class PowerManager(private val context: Context) {
                 .build()
         }
     }
-    
+
     /**
      * Get maximum allowed connections for current power mode
      */
@@ -195,7 +195,7 @@ class PowerManager(private val context: Context) {
             PowerMode.ULTRA_LOW_POWER -> MAX_CONNECTIONS_ULTRA_LOW
         }
     }
-    
+
     /**
      * Get RSSI filter threshold for current power mode
      */
@@ -207,14 +207,14 @@ class PowerManager(private val context: Context) {
             PowerMode.ULTRA_LOW_POWER -> -65
         }
     }
-    
+
     /**
      * Check if duty cycling should be used
      */
     fun shouldUseDutyCycle(): Boolean {
         return currentMode != PowerMode.PERFORMANCE
     }
-    
+
     /**
      * Get current power mode information
      */
@@ -230,33 +230,33 @@ class PowerManager(private val context: Context) {
             appendLine("Use Duty Cycle: ${shouldUseDutyCycle()}")
         }
     }
-    
+
     private fun updatePowerMode() {
         val newMode = when {
             // Always use performance mode when charging (unless in background too long)
             isCharging && !isAppInBackground -> PowerMode.PERFORMANCE
-            
+
             // Critical battery - use ultra low power
             batteryLevel <= CRITICAL_BATTERY -> PowerMode.ULTRA_LOW_POWER
-            
+
             // Low battery - use power saver
             batteryLevel <= LOW_BATTERY -> PowerMode.POWER_SAVER
-            
+
             // Background app with medium battery - use power saver
             isAppInBackground && batteryLevel <= MEDIUM_BATTERY -> PowerMode.POWER_SAVER
-            
+
             // Background app with good battery - use balanced
             isAppInBackground -> PowerMode.BALANCED
-            
+
             // Foreground with good battery - use balanced
             else -> PowerMode.BALANCED
         }
-        
+
         if (newMode != currentMode) {
             val oldMode = currentMode
             currentMode = newMode
             Log.i(TAG, "Power mode changed: $oldMode → $newMode (battery: $batteryLevel%, charging: $isCharging, background: $isAppInBackground)")
-            
+
             // Update connection limits based on mode
             when (newMode) {
                 PowerMode.PERFORMANCE -> {
@@ -280,9 +280,9 @@ class PowerManager(private val context: Context) {
                     maxClientConnections = 1
                 }
             }
-            
+
             delegate?.onPowerModeChanged(currentMode)
-            
+
             // Restart duty cycle with new parameters
             if (shouldUseDutyCycle()) {
                 startDutyCycle()
@@ -291,29 +291,29 @@ class PowerManager(private val context: Context) {
             }
         }
     }
-    
+
     private fun startDutyCycle() {
         stopDutyCycle()
-        
+
         if (!shouldUseDutyCycle()) {
             delegate?.onScanStateChanged(true) // Always scan in performance mode
             return
         }
-        
+
         val (onDuration, offDuration) = when (currentMode) {
             PowerMode.BALANCED -> SCAN_ON_DURATION_NORMAL to SCAN_OFF_DURATION_NORMAL
             PowerMode.POWER_SAVER -> SCAN_ON_DURATION_POWER_SAVE to SCAN_OFF_DURATION_POWER_SAVE
             PowerMode.ULTRA_LOW_POWER -> SCAN_ON_DURATION_ULTRA_LOW to SCAN_OFF_DURATION_ULTRA_LOW
             PowerMode.PERFORMANCE -> return // No duty cycle
         }
-        
+
         dutyCycleJob = powerScope.launch {
             while (isActive && shouldUseDutyCycle()) {
                 // Scan ON period
                 Log.d(TAG, "Duty cycle: Scan ON for ${onDuration}ms")
                 delegate?.onScanStateChanged(true)
                 delay(onDuration)
-                
+
                 // Scan OFF period (keep advertising active)
                 if (isActive && shouldUseDutyCycle()) {
                     Log.d(TAG, "Duty cycle: Scan OFF for ${offDuration}ms")
@@ -322,15 +322,15 @@ class PowerManager(private val context: Context) {
                 }
             }
         }
-        
+
         Log.i(TAG, "Started duty cycle: ${onDuration}ms ON, ${offDuration}ms OFF")
     }
-    
+
     private fun stopDutyCycle() {
         dutyCycleJob?.cancel()
         dutyCycleJob = null
     }
-    
+
     private fun registerBatteryReceiver() {
         try {
             val filter = IntentFilter().apply {
@@ -343,7 +343,7 @@ class PowerManager(private val context: Context) {
             Log.w(TAG, "Failed to register battery receiver: ${e.message}")
         }
     }
-    
+
     private fun unregisterBatteryReceiver() {
         try {
             context.unregisterReceiver(batteryReceiver)

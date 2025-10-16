@@ -5,11 +5,11 @@ package me.cashu.wallet.ui.debug
  * Provides default configuration values
  */
 object DebugPreferenceManager {
-    
+
     fun getSeenPacketCapacity(default: Int): Int = default
-    
+
     fun getGcsMaxFilterBytes(default: Int): Int = default
-    
+
     fun getGcsFprPercent(default: Double): Double = default
 }
 

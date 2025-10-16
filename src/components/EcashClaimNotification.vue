@@ -4,7 +4,7 @@
       <template v-slot:avatar>
         <q-icon name="bluetooth" size="md" />
       </template>
-      
+
       <div class="banner-content">
         <div class="text-h6">
           {{ unclaimedCount }} Ecash Token{{ unclaimedCount !== 1 ? 's' : '' }} Received
@@ -13,7 +13,7 @@
           Total: {{ unclaimedValue }} sats via Bluetooth
         </div>
       </div>
-      
+
       <template v-slot:action>
         <q-btn
           flat
@@ -28,7 +28,7 @@
         />
       </template>
     </q-banner>
-    
+
     <!-- Details expansion -->
     <q-slide-transition>
       <div v-if="showDetails" class="q-mt-sm">
@@ -40,7 +40,7 @@
                   {{ token.amount }}
                 </q-avatar>
               </q-item-section>
-              
+
               <q-item-section>
                 <q-item-label>
                   {{ token.amount }} {{ token.unit }}
@@ -55,7 +55,7 @@
                   {{ formatTimestamp(token.timestamp) }}
                 </q-item-label>
               </q-item-section>
-              
+
               <q-item-section side>
                 <q-btn
                   round
@@ -84,45 +84,45 @@ import { notifySuccess, notifyError } from 'src/js/notify';
 
 export default defineComponent({
   name: 'EcashClaimNotification',
-  
+
   setup() {
     const bluetoothStore = useBluetoothStore();
     const showDetails = ref(false);
     const claiming = ref(false);
     const claimingTokens = ref(new Set<string>());
-    
-    const unclaimedTokens = computed(() => 
+
+    const unclaimedTokens = computed(() =>
       bluetoothStore.unclaimedTokens.filter(t => !t.claimed)
     );
-    
+
     const unclaimedCount = computed(() => unclaimedTokens.value.length);
-    
-    const unclaimedValue = computed(() => 
+
+    const unclaimedValue = computed(() =>
       unclaimedTokens.value
         .filter(t => t.unit === 'sat')
         .reduce((sum, t) => sum + t.amount, 0)
     );
-    
+
     const formatNpub = (npub: string): string => {
       if (!npub) return 'Unknown';
       return npub.substring(0, 12) + '...' + npub.substring(npub.length - 6);
     };
-    
+
     const formatTimestamp = (timestamp: number): string => {
       const date = new Date(timestamp);
       const now = Date.now();
       const diff = now - timestamp;
-      
+
       if (diff < 60000) return 'Just now';
       if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
       if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
-      
+
       return date.toLocaleDateString();
     };
-    
+
     const claimSingle = async (tokenId: string) => {
       claimingTokens.value.add(tokenId);
-      
+
       try {
         const success = await bluetoothStore.claimToken(tokenId);
         if (success) {
@@ -136,10 +136,10 @@ export default defineComponent({
         claimingTokens.value = new Set(claimingTokens.value);  // Trigger reactivity
       }
     };
-    
+
     const claimAll = async () => {
       claiming.value = true;
-      
+
       try {
         await bluetoothStore.autoClaimTokens();
         notifySuccess('All tokens claimed!');
@@ -151,7 +151,7 @@ export default defineComponent({
         claiming.value = false;
       }
     };
-    
+
     return {
       bluetoothStore,
       showDetails,

@@ -56,7 +56,7 @@ Bluetooth mesh networking integration is **85% complete** with core infrastructu
 ### Mesh Components (17 files)
 ```
 mesh/BluetoothMeshService.kt          - Main coordinator
-mesh/BluetoothConnectionManager.kt    - BLE connection handling  
+mesh/BluetoothConnectionManager.kt    - BLE connection handling
 mesh/BluetoothGattClientManager.kt    - Client scanning/connection
 mesh/BluetoothGattServerManager.kt    - Server advertising
 mesh/BluetoothConnectionTracker.kt    - Connection lifecycle
@@ -262,7 +262,7 @@ src/components/EcashClaimNotification.vue - Claim banner
 ## Git Commits
 
 - `e298379` - Port Bluetooth mesh (Phase 1) - 74 files
-- `7a8b9c5` - Add UI integration (Phases 2-5) - 11 files  
+- `7a8b9c5` - Add UI integration (Phases 2-5) - 11 files
 - `af99344` - Fix compilation errors - 18 files
 
 ## Total Changes

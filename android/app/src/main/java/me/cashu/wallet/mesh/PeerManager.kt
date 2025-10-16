@@ -22,9 +22,9 @@ data class PeerInfo(
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
-        
+
         other as PeerInfo
-        
+
         if (id != other.id) return false
         if (nickname != other.nickname) return false
         if (isConnected != other.isConnected) return false
@@ -39,10 +39,10 @@ data class PeerInfo(
         } else if (other.signingPublicKey != null) return false
         if (isVerifiedNickname != other.isVerifiedNickname) return false
         if (lastSeen != other.lastSeen) return false
-        
+
         return true
     }
-    
+
     override fun hashCode(): Int {
         var result = id.hashCode()
         result = 31 * result + nickname.hashCode()
@@ -59,35 +59,35 @@ data class PeerInfo(
 /**
  * Manages active peers, nicknames, RSSI tracking, and peer fingerprints
  * Extracted from BluetoothMeshService for better separation of concerns
- * 
+ *
  * Now includes centralized peer fingerprint management via PeerFingerprintManager singleton
  * and support for signed announcement verification
  */
 class PeerManager {
-    
+
     companion object {
         private const val TAG = "PeerManager"
         private const val STALE_PEER_TIMEOUT = 180000L // 3 minutes (same as iOS)
         private const val CLEANUP_INTERVAL = 60000L // 1 minute
     }
-    
+
     // Peer tracking data - enhanced with verification status
     private val peers = ConcurrentHashMap<String, PeerInfo>() // peerID -> PeerInfo
     private val peerRSSI = ConcurrentHashMap<String, Int>()
     private val announcedPeers = CopyOnWriteArrayList<String>()
     private val announcedToPeers = CopyOnWriteArrayList<String>()
-    
+
     // Legacy fields removed: use PeerInfo map exclusively
-    
+
     // Centralized fingerprint management
     private val fingerprintManager = PeerFingerprintManager.getInstance()
-    
+
     // Delegate for callbacks
     var delegate: PeerManagerDelegate? = null
-    
+
     // Coroutines
     private val managerScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-    
+
     init {
         startPeriodicCleanup()
     }
@@ -106,11 +106,11 @@ class PeerManager {
         isVerified: Boolean
     ): Boolean {
         if (peerID == "unknown") return false
-        
+
         val now = System.currentTimeMillis()
         val existingPeer = peers[peerID]
         val isNewPeer = existingPeer == null
-        
+
         // Update or create peer info
         val peerInfo = PeerInfo(
             id = peerID,
@@ -122,13 +122,13 @@ class PeerManager {
             isVerifiedNickname = isVerified,
             lastSeen = now
         )
-        
+
         peers[peerID] = peerInfo
-        
+
         // Update derived state only
         // No legacy maps; peers map is the single source of truth
         // Maintain announcedPeers for first-time announce semantics
-        
+
         if (isNewPeer && isVerified) {
             announcedPeers.add(peerID)
             notifyPeerListUpdate()
@@ -139,7 +139,7 @@ class PeerManager {
         } else {
             Log.d(TAG, "⚠️ Unverified peer announcement from: $nickname ($peerID)")
         }
-        
+
         return false
     }
 
@@ -194,14 +194,14 @@ class PeerManager {
             }
         }
     }
-    
+
     /**
      * Add or update peer with nickname
      * Maintained for compatibility. Uses peers map exclusively now.
      */
     fun addOrUpdatePeer(peerID: String, nickname: String): Boolean {
         if (peerID == "unknown") return false
-        
+
         // Clean up stale peer IDs with the same nickname (exact same logic as iOS)
         val now = System.currentTimeMillis()
         val stalePeerIDs = mutableListOf<String>()
@@ -213,15 +213,15 @@ class PeerManager {
                 }
             }
         }
-        
+
         // Remove stale peer IDs
         stalePeerIDs.forEach { stalePeerID ->
             removePeer(stalePeerID, notifyDelegate = false)
         }
-        
+
         // Check if this is a new peer announcement
         val isFirstAnnounce = !announcedPeers.contains(peerID)
-        
+
         // Update peer data
         val existing = peers[peerID]
         if (existing != null) {
@@ -238,7 +238,7 @@ class PeerManager {
                 lastSeen = now
             )
         }
-        
+
         // Handle first announcement
         if (isFirstAnnounce) {
             announcedPeers.add(peerID)
@@ -248,7 +248,7 @@ class PeerManager {
         Log.d(TAG, "Updated peer: $peerID ($nickname)")
         return false
     }
-    
+
     /**
      * Remove peer
      */
@@ -257,17 +257,17 @@ class PeerManager {
         peerRSSI.remove(peerID)
         announcedPeers.remove(peerID)
         announcedToPeers.remove(peerID)
-        
+
         // Also remove fingerprint mappings
         fingerprintManager.removePeer(peerID)
-        
+
         if (notifyDelegate && removed != null) {
             // Notify specific removal event then list update
             try { delegate?.onPeerRemoved(peerID) } catch (_: Exception) {}
             notifyPeerListUpdate()
         }
     }
-    
+
     /**
      * Update peer RSSI
      */
@@ -276,14 +276,14 @@ class PeerManager {
             peerRSSI[peerID] = rssi
         }
     }
-    
+
     /**
      * Check if peer has been announced to
      */
     fun hasAnnouncedToPeer(peerID: String): Boolean {
         return announcedToPeers.contains(peerID)
     }
-    
+
     /**
      * Mark peer as announced to
      */
@@ -292,7 +292,7 @@ class PeerManager {
             announcedToPeers.add(peerID)
         }
     }
-    
+
     /**
      * Check if peer is active
      */
@@ -301,35 +301,35 @@ class PeerManager {
         val now = System.currentTimeMillis()
         return (now - info.lastSeen) <= STALE_PEER_TIMEOUT && info.isConnected
     }
-    
+
     /**
      * Get peer nickname
      */
     fun getPeerNickname(peerID: String): String? {
         return peers[peerID]?.nickname
     }
-    
+
     /**
      * Get all peer nicknames
      */
     fun getAllPeerNicknames(): Map<String, String> {
         return peers.mapValues { it.value.nickname }
     }
-    
+
     /**
      * Get all peer RSSI values
      */
     fun getAllPeerRSSI(): Map<String, Int> {
         return peerRSSI.toMap()
     }
-    
+
     /**
      * Get all peers as a list
      */
     fun getAllPeersInfo(): List<PeerInfo> {
         return peers.values.toList()
     }
-    
+
     /**
      * Get list of active peer IDs
      */
@@ -340,14 +340,14 @@ class PeerManager {
             .toList()
             .sorted()
     }
-    
+
     /**
      * Get active peer count
      */
     fun getActivePeerCount(): Int {
         return getActivePeerIDs().size
     }
-    
+
     /**
      * Clear all peer data
      */
@@ -356,13 +356,13 @@ class PeerManager {
         peerRSSI.clear()
         announcedPeers.clear()
         announcedToPeers.clear()
-        
+
         // Also clear fingerprint mappings
         fingerprintManager.clearAllFingerprints()
-        
+
         notifyPeerListUpdate()
     }
-    
+
     /**
      * Get debug information
      */
@@ -385,7 +385,7 @@ class PeerManager {
             appendLine("Announced To Peers: ${announcedToPeers.size}")
         }
     }
-    
+
     /**
      * Get debug information with device addresses
      */
@@ -406,7 +406,7 @@ class PeerManager {
             appendLine(getDebugInfo(addressPeerMap))
         }
     }
-    
+
     /**
      * Notify delegate of peer list updates
      */
@@ -414,7 +414,7 @@ class PeerManager {
         val peerList = getActivePeerIDs()
         delegate?.onPeerListUpdated(peerList)
     }
-    
+
     /**
      * Start periodic cleanup of stale peers
      */
@@ -426,43 +426,43 @@ class PeerManager {
             }
         }
     }
-    
+
     /**
      * Clean up stale peers (same 3-minute threshold as iOS)
      */
     private fun cleanupStalePeers() {
         val now = System.currentTimeMillis()
-        
+
         val peersToRemove = peers.filterValues { (now - it.lastSeen) > STALE_PEER_TIMEOUT }
             .keys
             .toList()
-        
+
         peersToRemove.forEach { peerID ->
             Log.d(TAG, "Removing stale peer: $peerID")
             removePeer(peerID)
         }
-        
+
         if (peersToRemove.isNotEmpty()) {
             Log.d(TAG, "Cleaned up ${peersToRemove.size} stale peers")
         }
     }
-    
+
     // MARK: - Fingerprint Management (Centralized)
-    
+
     /**
      * Store fingerprint for a peer after successful Noise handshake
      * This should only be called when a Noise session is established
-     * 
+     *
      * @param peerID The peer's ID
      * @param publicKey The peer's static public key from Noise handshake
      */
     fun storeFingerprintForPeer(peerID: String, publicKey: ByteArray): String {
         return fingerprintManager.storeFingerprintForPeer(peerID, publicKey)
     }
-    
+
     /**
      * Update peer ID mapping for peer ID rotation
-     * 
+     *
      * @param oldPeerID The previous peer ID (nullable)
      * @param newPeerID The new peer ID
      * @param fingerprint The persistent fingerprint
@@ -470,60 +470,60 @@ class PeerManager {
     fun updatePeerIDMapping(oldPeerID: String?, newPeerID: String, fingerprint: String) {
         fingerprintManager.updatePeerIDMapping(oldPeerID, newPeerID, fingerprint)
     }
-    
+
     /**
      * Get fingerprint for a specific peer
-     * 
+     *
      * @param peerID The peer ID to look up
      * @return The fingerprint if found, null otherwise
      */
     fun getFingerprintForPeer(peerID: String): String? {
         return fingerprintManager.getFingerprintForPeer(peerID)
     }
-    
+
     /**
      * Get current peer ID for a specific fingerprint
-     * 
+     *
      * @param fingerprint The fingerprint to look up
      * @return The current peer ID if found, null otherwise
      */
     fun getPeerIDForFingerprint(fingerprint: String): String? {
         return fingerprintManager.getPeerIDForFingerprint(fingerprint)
     }
-    
+
     /**
      * Check if we have a fingerprint for a specific peer
-     * 
+     *
      * @param peerID The peer ID to check
      * @return True if we have a fingerprint for this peer, false otherwise
      */
     fun hasFingerprintForPeer(peerID: String): Boolean {
         return fingerprintManager.hasFingerprintForPeer(peerID)
     }
-    
+
     /**
      * Get all current peer ID to fingerprint mappings
-     * 
+     *
      * @return Immutable copy of all mappings
      */
     fun getAllPeerFingerprints(): Map<String, String> {
         return fingerprintManager.getAllPeerFingerprints()
     }
-    
+
     /**
      * Clear all fingerprint mappings (used for emergency clear)
      */
     fun clearAllFingerprints() {
         fingerprintManager.clearAllFingerprints()
     }
-    
+
     /**
      * Get fingerprint manager debug info
      */
     fun getFingerprintDebugInfo(): String {
         return fingerprintManager.getDebugInfo()
     }
-    
+
     /**
      * Shutdown the manager
      */

@@ -251,12 +251,12 @@ class GossipSyncManager(
                 idsToRemove.add(id)
             }
         }
-        
+
         // Now remove the collected IDs
         for (id in idsToRemove) {
             messages.remove(id)
         }
-        
+
         if (idsToRemove.isNotEmpty()) {
             Log.d(TAG, "Pruned ${idsToRemove.size} messages with senders without announcements")
         }

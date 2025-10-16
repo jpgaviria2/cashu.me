@@ -3,7 +3,7 @@ package me.cashu.wallet.model
 import android.content.Context
 import android.net.Uri
 import android.util.Log
-import me.cashu.wallet.features.file.FileUtils
+import me.cashu.wallet.util.FileUtils
 import java.io.File
 
 /**

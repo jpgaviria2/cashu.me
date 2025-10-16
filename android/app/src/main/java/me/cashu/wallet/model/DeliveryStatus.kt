@@ -20,7 +20,7 @@ sealed class DeliveryStatus : Parcelable {
 
     @Parcelize
     data class Read(val by: String, val at: Date) : DeliveryStatus()
-    
+
     @Parcelize
     data class Claimed(val by: String, val at: Date) : DeliveryStatus()
 

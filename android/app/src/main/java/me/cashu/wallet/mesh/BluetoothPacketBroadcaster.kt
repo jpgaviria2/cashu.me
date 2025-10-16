@@ -24,7 +24,7 @@ import kotlinx.coroutines.channels.actor
 
 /**
  * Handles packet broadcasting to connected devices using actor pattern for serialization
- * 
+ *
  * In Bluetooth Low Energy (BLE):
  *
  * Peripheral (server):
@@ -44,7 +44,7 @@ class BluetoothPacketBroadcaster(
     private val connectionTracker: BluetoothConnectionTracker,
     private val fragmentManager: FragmentManager?
 ) {
-    
+
     companion object {
         private const val TAG = "BluetoothPacketBroadcaster"
         private const val CLEANUP_DELAY = 500L
@@ -56,7 +56,7 @@ class BluetoothPacketBroadcaster(
     fun setNicknameResolver(resolver: (String) -> String?) {
         nicknameResolver = resolver
     }
-    
+
     /**
      * Debug logging helper - can be easily removed/disabled for production
      */
@@ -74,7 +74,7 @@ class BluetoothPacketBroadcaster(
             val fromNick = incomingPeer?.let { nicknameResolver?.invoke(it) }
             val toNick = toPeer?.let { nicknameResolver?.invoke(it) }
             val isRelay = (incomingAddr != null || incomingPeer != null)
-            
+
             me.cashu.wallet.ui.debug.DebugSettingsManager.getInstance().logPacketRelayDetailed(
                 packetType = typeName,
                 senderPeerID = senderPeerID,
@@ -85,25 +85,25 @@ class BluetoothPacketBroadcaster(
                 toPeerID = toPeer,
                 toNickname = toNick,
                 toDeviceAddress = toDeviceAddress,
-                ttl = ttl,
+                ttl = ttl.toInt(),
                 isRelay = isRelay
             )
-        } catch (_: Exception) { 
+        } catch (_: Exception) {
             // Silently ignore debug logging failures
         }
     }
-    
+
     // Data class to hold broadcast request information
     private data class BroadcastRequest(
         val routed: RoutedPacket,
         val gattServer: BluetoothGattServer?,
         val characteristic: BluetoothGattCharacteristic?
     )
-    
+
     // Actor scope for the broadcaster
     private val broadcasterScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val transferJobs = ConcurrentHashMap<String, Job>()
-    
+
     // SERIALIZATION: Actor to serialize all broadcast operations
     @OptIn(kotlinx.coroutines.ObsoleteCoroutinesApi::class)
     private val broadcasterActor = broadcasterScope.actor<BroadcastRequest>(
@@ -118,7 +118,7 @@ class BluetoothPacketBroadcaster(
             Log.d(TAG, "🎭 Packet broadcaster actor terminated")
         }
     }
-    
+
     fun broadcastPacket(
         routed: RoutedPacket,
         gattServer: BluetoothGattServer?,
@@ -173,7 +173,7 @@ class BluetoothPacketBroadcaster(
                 return
             }
         }
-        
+
         // Send single packet if no fragmentation needed
         if (transferId != null) {
             TransferProgressManager.start(transferId, 1)
@@ -255,7 +255,7 @@ class BluetoothPacketBroadcaster(
         md.digest().joinToString("") { "%02x".format(it) }
     } catch (_: Exception) { bytes.size.toString(16) }
 
-    
+
     /**
      * Public entry point for broadcasting - submits request to actor for serialization
      */
@@ -275,7 +275,7 @@ class BluetoothPacketBroadcaster(
             }
         }
     }
-    
+
     /**
      * Internal broadcast implementation - runs in serialized actor context
      */
@@ -291,7 +291,7 @@ class BluetoothPacketBroadcaster(
         val incomingAddr = routed.relayAddress
         val incomingPeer = incomingAddr?.let { connectionTracker.addressPeerMap[it] }
         val senderNick = senderPeerID.let { pid -> nicknameResolver?.invoke(pid) }
-        
+
         if (packet.recipientID != SpecialRecipients.BROADCAST) {
             val recipientID = packet.recipientID?.let {
                 String(it).replace("\u0000", "").trim()
@@ -300,7 +300,7 @@ class BluetoothPacketBroadcaster(
             // Try to find the recipient in server connections (subscribedDevices)
             val targetDevice = connectionTracker.getSubscribedDevices()
                 .firstOrNull { connectionTracker.addressPeerMap[it.address] == recipientID }
-            
+
             // If found, send directly
             if (targetDevice != null) {
                 Log.d(TAG, "Send packet type ${packet.type} directly to target device for recipient $recipientID: ${targetDevice.address}")
@@ -314,7 +314,7 @@ class BluetoothPacketBroadcaster(
             // Try to find the recipient in client connections (connectedDevices)
             val targetDeviceConn = connectionTracker.getConnectedDevices().values
                 .firstOrNull { connectionTracker.addressPeerMap[it.device.address] == recipientID }
-            
+
             // If found, send directly
             if (targetDeviceConn != null) {
                 Log.d(TAG, "Send packet type ${packet.type} directly to target client connection for recipient $recipientID: ${targetDeviceConn.device.address}")
@@ -329,11 +329,11 @@ class BluetoothPacketBroadcaster(
         // Else, continue with broadcasting to all devices
         val subscribedDevices = connectionTracker.getSubscribedDevices()
         val connectedDevices = connectionTracker.getConnectedDevices()
-        
+
         Log.i(TAG, "Broadcasting packet type ${packet.type} to ${subscribedDevices.size} server + ${connectedDevices.size} client connections")
 
-        val senderID = String(packet.senderID).replace("\u0000", "")        
-        
+        val senderID = String(packet.senderID).replace("\u0000", "")
+
         // Send to server connections (devices connected to our GATT server)
         subscribedDevices.forEach { device ->
             if (device.address == routed.relayAddress) {
@@ -350,7 +350,7 @@ class BluetoothPacketBroadcaster(
                 logPacketRelay(typeName, senderPeerID, senderNick, incomingPeer, incomingAddr, toPeer, device.address, packet.ttl)
             }
         }
-        
+
         // Send to client connections (GATT servers we are connected to)
         connectedDevices.values.forEach { deviceConn ->
             if (deviceConn.isClient && deviceConn.gatt != null && deviceConn.characteristic != null) {
@@ -370,12 +370,12 @@ class BluetoothPacketBroadcaster(
             }
         }
     }
-    
+
     /**
      * Send data to a single device (server->client)
      */
     private fun notifyDevice(
-        device: BluetoothDevice, 
+        device: BluetoothDevice,
         data: ByteArray,
         gattServer: BluetoothGattServer?,
         characteristic: BluetoothGattCharacteristic?
@@ -401,7 +401,7 @@ class BluetoothPacketBroadcaster(
      * Send data to a single device (client->server)
      */
     private fun writeToDeviceConn(
-        deviceConn: BluetoothConnectionTracker.DeviceConnection, 
+        deviceConn: BluetoothConnectionTracker.DeviceConnection,
         data: ByteArray
     ): Boolean {
         return try {
@@ -419,7 +419,7 @@ class BluetoothPacketBroadcaster(
             false
         }
     }
-    
+
     /**
      * Get debug information
      */
@@ -431,19 +431,19 @@ class BluetoothPacketBroadcaster(
             appendLine("Connection Scope Active: ${connectionScope.isActive}")
         }
     }
-    
+
     /**
      * Shutdown the broadcaster actor gracefully
      */
     fun shutdown() {
         Log.d(TAG, "Shutting down BluetoothPacketBroadcaster actor")
-        
+
         // Close the actor gracefully
         broadcasterActor.close()
-        
+
         // Cancel the broadcaster scope
         broadcasterScope.cancel()
-        
+
         Log.d(TAG, "BluetoothPacketBroadcaster shutdown complete")
     }
-} 
+}
