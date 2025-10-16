@@ -49,6 +49,22 @@
           <ReceiveDialog v-model="showReceiveDialog" />
           <SendDialog v-model="showSendDialog" />
         </div>
+
+        <!-- Lightning Address Button -->
+        <div class="row justify-center q-mb-sm q-mt-sm">
+          <q-btn
+            rounded
+            outline
+            color="warning"
+            icon="bolt"
+            label="Lightning Address"
+            @click="goToNpubPage"
+            class="q-px-lg"
+          >
+            <q-tooltip>View your Lightning Address page</q-tooltip>
+          </q-btn>
+        </div>
+
         <!-- ///////////////////////////////////////////
       ////////////////// TABLES /////////////////
       /////////////////////////////////////////// -->
@@ -664,6 +680,9 @@ export default {
           });
         }
       });
+    },
+    goToNpubPage: function () {
+      this.$router.push("/npub");
     },
   },
   watch: {},

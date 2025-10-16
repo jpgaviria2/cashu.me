@@ -44,6 +44,13 @@ const routes = [
       { path: "", component: () => import("src/pages/TermsPage.vue") },
     ],
   },
+  {
+    path: "/npub",
+    component: () => import("layouts/MainLayout.vue"),
+    children: [
+      { path: "", component: () => import("src/pages/NpubPage.vue") },
+    ],
+  },
 
   // Always leave this as last one,
   // but you can also remove it
