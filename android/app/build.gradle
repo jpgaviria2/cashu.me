@@ -3,10 +3,10 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-parcelize'
 
 android {
-    namespace "me.cashu.wallet"
+    namespace "me.bitpoints.wallet"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "me.cashu.wallet"
+        applicationId "me.bitpoints.wallet"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

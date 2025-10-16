@@ -1,9 +1,9 @@
 {
-  "name": "trails-coffee-rewards",
+  "name": "bitpoints",
   "version": "0.0.1",
-  "description": "Trails Coffee Rewards App",
-  "productName": "Trails Coffee Rewards",
-  "author": "Trails Coffee",
+  "description": "Bitcoin-backed rewards wallet merging Cashu ecash, Nostr identity, and Bluetooth mesh protocols for maximum interoperability and privacy",
+  "productName": "Bitpoints",
+  "author": "Bitpoints.me",
   "private": true,
   "scripts": {
     "dev": "quasar dev",
