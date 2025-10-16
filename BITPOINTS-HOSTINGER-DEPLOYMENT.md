@@ -185,3 +185,4 @@ To update the app:
 **Features**: Web Bluetooth + Bitpoints.me branding
 
 🎉 **Your Bitpoints.me app with Web Bluetooth support is ready for production!**
+
