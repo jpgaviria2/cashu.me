@@ -104,6 +104,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 
+// UUIDs must be lowercase for Web Bluetooth API
 const SERVICE_UUID = 'f47b5e2d-4a9e-4c5a-9b3f-8e1d2c3a4b5c';
 const CHARACTERISTIC_UUID = 'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d';
 
