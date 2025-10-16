@@ -4,7 +4,8 @@
       <div class="col-12 col-sm-11 col-md-8 text-center q-gutter-y-sm">
         <ActivityOrb />
         <NoMintWarnBanner v-if="mints.length == 0" />
-        <BalanceView v-else :set-tab="setTab" />
+        <EcashClaimNotification v-if="isNativeApp" />
+        <BalanceView v-if="mints.length > 0" :set-tab="setTab" />
         <div
           class="row items-center justify-center no-wrap q-mb-sm q-mx-none q-px-none q-pt-sm q-pb-sm position-relative"
         >
@@ -48,6 +49,31 @@
           </div>
           <ReceiveDialog v-model="showReceiveDialog" />
           <SendDialog v-model="showSendDialog" />
+        </div>
+        
+        <!-- Bluetooth Nearby Sending (Android only) -->
+        <div v-if="isNativeApp" class="row justify-center q-mt-sm q-mb-md">
+          <q-btn
+            rounded
+            outline
+            color="secondary"
+            class="q-px-lg"
+            @click="showNearbyDialog = true"
+          >
+            <q-icon name="bluetooth" size="1.2rem" class="q-mr-sm" />
+            <span>Send to Nearby</span>
+          </q-btn>
+        </div>
+        
+        <!-- Nearby Contacts Dialog -->
+        <q-dialog v-model="showNearbyDialog" position="bottom">
+          <q-card style="width: 100%; max-width: 600px;">
+            <NearbyContactsDialog />
+            <q-card-actions align="right">
+              <q-btn flat label="Close" color="primary" v-close-popup />
+            </q-card-actions>
+          </q-card>
+        </q-dialog>
         </div>
         <!-- ///////////////////////////////////////////
       ////////////////// TABLES /////////////////
@@ -287,6 +313,8 @@ import InvoiceDetailDialog from "components/InvoiceDetailDialog.vue";
 import SendDialog from "components/SendDialog.vue";
 import ReceiveDialog from "components/ReceiveDialog.vue";
 import QrcodeReader from "components/QrcodeReader.vue";
+import EcashClaimNotification from "components/EcashClaimNotification.vue";
+import NearbyContactsDialog from "components/NearbyContactsDialog.vue";
 import iOSPWAPrompt from "components/iOSPWAPrompt.vue";
 import AndroidPWAPrompt from "components/AndroidPWAPrompt.vue";
 import ActivityOrb from "components/ActivityOrb.vue";
@@ -302,6 +330,7 @@ import { useWalletStore } from "src/stores/wallet";
 import { useUiStore } from "src/stores/ui";
 import { useProofsStore } from "src/stores/proofs";
 import { useCameraStore } from "src/stores/camera";
+import { useBluetoothStore } from "src/stores/bluetooth";
 import { useP2PKStore } from "src/stores/p2pk";
 import { useNWCStore } from "src/stores/nwc";
 import { useNPCStore } from "src/stores/npubcash";
@@ -344,6 +373,8 @@ export default {
     AndroidPWAPrompt,
     ScanIcon,
     ActivityOrb,
+    EcashClaimNotification,
+    NearbyContactsDialog,
   },
   data: function () {
     return {
@@ -351,6 +382,7 @@ export default {
       mintId: "",
       mintName: "",
       deferredPWAInstallPrompt: null,
+      showNearbyDialog: false,
       action: "main",
       parse: {
         show: false,
@@ -648,6 +680,22 @@ export default {
         }
       };
     },
+    initializeBluetooth: async function () {
+      // Only initialize Bluetooth for native Android app
+      if (!this.isNativeApp) {
+        console.log('Skipping Bluetooth init - not a native app');
+        return;
+      }
+      
+      try {
+        const bluetoothStore = useBluetoothStore();
+        await bluetoothStore.initialize();
+        await bluetoothStore.startService();
+        console.log('Bluetooth mesh service initialized');
+      } catch (e) {
+        console.error('Failed to initialize Bluetooth:', e);
+      }
+    },
     equalizeButtonWidths: function () {
       this.$nextTick(() => {
         const actionBtns = document.querySelectorAll(".wallet-action-btn");
@@ -681,6 +729,8 @@ export default {
     this.getLatestQuotes();
     // Start Lightning address check worker
     this.lightningAddressCheckWorker();
+    // Initialize Bluetooth service for native apps
+    this.initializeBluetooth();
     // Ensure wallet action buttons have equal width
     this.$nextTick(this.equalizeButtonWidths);
     // Add window resize listener to handle responsive layouts
