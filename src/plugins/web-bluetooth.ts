@@ -42,15 +42,30 @@ export class WebBluetoothService {
    */
   async requestDevice(): Promise<WebBluetoothPeer | null> {
     try {
-      const device = await navigator.bluetooth.requestDevice({
-        filters: [{ services: [SERVICE_UUID] }],
-        optionalServices: [SERVICE_UUID]
-      });
+      // First try to find devices with our specific service
+      let device;
+      try {
+        device = await navigator.bluetooth.requestDevice({
+          filters: [{ services: [SERVICE_UUID] }],
+          optionalServices: [SERVICE_UUID]
+        });
+      } catch (serviceError) {
+        console.log('No devices with Bitpoints service found, trying generic BLE devices...');
+        
+        // Fallback: Look for any BLE device (more compatible)
+        device = await navigator.bluetooth.requestDevice({
+          acceptAllDevices: true,
+          optionalServices: [SERVICE_UUID]
+        });
+      }
 
       // Extract nickname from device name
-      let nickname = 'Unknown';
+      let nickname = device.name || 'Unknown Device';
       if (device.name && device.name.startsWith('BP:')) {
         nickname = device.name.substring(3);
+      } else if (device.name) {
+        // Use device name as nickname
+        nickname = device.name;
       }
 
       const peer: WebBluetoothPeer = {
@@ -62,8 +77,13 @@ export class WebBluetoothService {
 
       this.devices.set(device.id, peer);
       
-      // Connect to device
-      await this.connectToPeer(peer);
+      // Try to connect to device (may fail if it doesn't support our service)
+      try {
+        await this.connectToPeer(peer);
+      } catch (connectError) {
+        console.warn('Could not connect to device with Bitpoints service, but device is available:', connectError);
+        // Still return the peer even if we can't connect to the specific service
+      }
 
       if (this.onPeerDiscovered) {
         this.onPeerDiscovered(peer);
@@ -72,6 +92,12 @@ export class WebBluetoothService {
       return peer;
     } catch (error) {
       console.error('Failed to request Bluetooth device:', error);
+      
+      // Check if it's a user cancellation
+      if (error.name === 'NotFoundError' || error.name === 'SecurityError') {
+        console.log('User cancelled device selection or permission denied');
+      }
+      
       return null;
     }
   }

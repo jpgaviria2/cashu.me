@@ -195,7 +195,8 @@ export const useBluetoothStore = defineStore('bluetooth', {
           const peer = await webBluetoothService.requestDevice();
           
           if (!peer) {
-            notifyWarning('No Bluetooth device selected');
+            // Don't show error for user cancellation
+            console.log('User cancelled device selection or no device available');
             return false;
           }
 
