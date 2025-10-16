@@ -84,6 +84,17 @@
       </q-list>
     </div>
 
+    <!-- BLUETOOTH SETTINGS SECTION -->
+    <div class="section-divider q-my-md">
+      <div class="divider-line"></div>
+      <div class="divider-text">Bluetooth Mesh</div>
+      <div class="divider-line"></div>
+    </div>
+
+    <div class="q-py-sm q-px-xs text-left">
+      <BluetoothSettings />
+    </div>
+
     <!-- TERMS & LEGAL SECTION -->
     <div class="section-divider q-my-md">
       <div class="divider-line"></div>
@@ -1937,6 +1948,7 @@ import { defineComponent } from "vue";
 import P2PKDialog from "./P2PKDialog.vue";
 import NWCDialog from "./NWCDialog.vue";
 import ChooseMint from "./ChooseMint.vue";
+import BluetoothSettings from "./BluetoothSettings.vue";
 import VueQrcode from "@chenfengyuan/vue-qrcode";
 
 import { getShortUrl } from "src/js/wallet-helpers";
@@ -1970,6 +1982,7 @@ export default defineComponent({
     P2PKDialog,
     NWCDialog,
     ChooseMint,
+    BluetoothSettings,
     VueQrcode,
   },
   props: {},

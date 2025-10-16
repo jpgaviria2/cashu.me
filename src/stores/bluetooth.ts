@@ -19,6 +19,7 @@ export const useBluetoothStore = defineStore('bluetooth', {
     unclaimedTokens: useLocalStorage<EcashMessage[]>('bluetooth-unclaimed-tokens', []),
     contacts: useLocalStorage<BluetoothContact[]>('bluetooth-contacts', []),
     pendingMessages: [] as string[],  // Message IDs being sent
+    nickname: useLocalStorage<string>('bluetooth-nickname', 'Bitpoints User'),
   }),
 
   getters: {
@@ -120,9 +121,12 @@ export const useBluetoothStore = defineStore('bluetooth', {
           return false;
         }
 
+        // Initialize with current nickname
+        await BluetoothEcash.initialize({ nickname: this.nickname });
+
         await BluetoothEcash.startService();
         this.isActive = true;
-        console.log('Bluetooth mesh service started');
+        console.log(`Bluetooth mesh service started with nickname: ${this.nickname}`);
 
         // Start polling for peers
         this.startPeerPolling();
@@ -146,6 +150,26 @@ export const useBluetoothStore = defineStore('bluetooth', {
         console.log('Bluetooth mesh service stopped');
       } catch (e) {
         console.error('Failed to stop Bluetooth service:', e);
+      }
+    },
+
+    /**
+     * Update Bluetooth nickname
+     * Restarts service if active to apply new nickname
+     */
+    async updateNickname(newNickname: string) {
+      if (newNickname.length < 3 || newNickname.length > 32) {
+        throw new Error('Nickname must be 3-32 characters');
+      }
+
+      const wasActive = this.isActive;
+      this.nickname = newNickname;
+
+      // Restart service to apply new nickname
+      if (wasActive) {
+        await this.stopService();
+        await this.startService();
+        console.log(`Bluetooth nickname updated to: ${newNickname}`);
       }
     },
 

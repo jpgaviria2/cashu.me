@@ -39,6 +39,15 @@
           <q-item-section>
             <q-item-label>
               {{ peer.nickname || peer.nostrNpub?.substring(0, 16) || peer.peerID.substring(0, 8) }}...
+              <q-icon 
+                v-if="isMutualFavorite(peer.peerID)"
+                name="favorite" 
+                color="pink"
+                size="xs"
+                class="q-ml-xs"
+              >
+                <q-tooltip>Mutual favorite</q-tooltip>
+              </q-icon>
             </q-item-label>
             <q-item-label caption>
               {{ peer.isDirect ? 'Direct' : 'Via mesh' }} • {{ formatLastSeen(peer.lastSeen) }}
@@ -46,11 +55,24 @@
           </q-item-section>
 
           <q-item-section side>
-            <q-checkbox
-              :model-value="selectedPeers.has(peer.peerID)"
-              @click.stop="togglePeerSelection(peer)"
-              color="primary"
-            />
+            <div class="row items-center q-gutter-xs">
+              <q-btn
+                flat
+                dense
+                round
+                size="sm"
+                :icon="isFavorite(peer.peerID) ? 'favorite' : 'favorite_border'"
+                :color="isFavorite(peer.peerID) ? 'pink' : 'grey'"
+                @click.stop="toggleFavorite(peer)"
+              >
+                <q-tooltip>{{ isFavorite(peer.peerID) ? 'Remove from favorites' : 'Add to favorites' }}</q-tooltip>
+              </q-btn>
+              <q-checkbox
+                :model-value="selectedPeers.has(peer.peerID)"
+                @click.stop="togglePeerSelection(peer)"
+                color="primary"
+              />
+            </div>
           </q-item-section>
         </q-item>
       </q-list>
@@ -119,6 +141,7 @@
 <script lang="ts">
 import { defineComponent, ref, computed } from 'vue';
 import { useBluetoothStore } from 'src/stores/bluetooth';
+import { useFavoritesStore } from 'src/stores/favorites';
 import { useWalletStore } from 'src/stores/wallet';
 import { useMintsStore } from 'src/stores/mints';
 import { useProofsStore } from 'src/stores/proofs';
@@ -132,6 +155,7 @@ export default defineComponent({
 
   setup() {
     const bluetoothStore = useBluetoothStore();
+    const favoritesStore = useFavoritesStore();
     const walletStore = useWalletStore();
     const mintsStore = useMintsStore();
     const proofsStore = useProofsStore();
@@ -320,6 +344,33 @@ export default defineComponent({
       return `${Math.floor(seconds / 86400)}d ago`;
     };
 
+    // Favorites methods
+    const isFavorite = (peerID: string): boolean => {
+      return favoritesStore.isFavorite(peerID);
+    };
+
+    const isMutualFavorite = (peerID: string): boolean => {
+      return favoritesStore.isMutualFavorite(peerID);
+    };
+
+    const toggleFavorite = async (peer: Peer) => {
+      if (isFavorite(peer.peerID)) {
+        favoritesStore.removeFavorite(peer.peerID);
+        notifySuccess(`Removed ${peer.nickname} from favorites`);
+      } else {
+        // Add to favorites with Nostr npub if available
+        favoritesStore.addFavorite(
+          peer.peerID,
+          peer.nickname || 'Unknown',
+          peer.nostrNpub || null
+        );
+        notifySuccess(`Added ${peer.nickname} to favorites`);
+        
+        // TODO: Send favorite notification via Bluetooth
+        // await bluetoothStore.sendFavoriteNotification(peer.peerID, true);
+      }
+    };
+
     return {
       bluetoothStore,
       nearbyPeers,
@@ -328,6 +379,9 @@ export default defineComponent({
       memo,
       sending,
       unit,
+      isFavorite,
+      isMutualFavorite,
+      toggleFavorite,
       togglePeerSelection,
       enableBluetooth,
       sendToPeers,

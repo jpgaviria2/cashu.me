@@ -591,5 +591,113 @@ export const useNostrStore = defineStore("nostr", {
         notifySuccess("Ecash added to history.");
       }
     },
+
+    /**
+     * Send ecash token via Nostr DM (for mutual favorites fallback)
+     * Implements BitChat's Nostr fallback pattern
+     */
+    async sendTokenViaNostr(token: string, recipientNpub: string, senderNickname: string = 'Bitpoints User') {
+      try {
+        if (!this.ndk || !this.connected) {
+          throw new Error('Nostr not connected');
+        }
+
+        // Create token notification content
+        const content = JSON.stringify({
+          type: 'BITPOINTS_TOKEN',
+          token,
+          timestamp: Date.now(),
+          senderNpub: this.npub,
+          senderNickname,
+        });
+
+        // Encrypt and send as DM (NIP-04)
+        const recipientHex = nip19.decode(recipientNpub).data as string;
+        const encrypted = await nip04.encrypt(this.privateKey, recipientHex, content);
+
+        // Create DM event (kind 4)
+        const dmEvent = new NDKEvent(this.ndk);
+        dmEvent.kind = 4; // Encrypted Direct Message
+        dmEvent.content = encrypted;
+        dmEvent.tags = [['p', recipientHex]];
+
+        await dmEvent.publish();
+
+        console.log(`📨 Sent token via Nostr to ${recipientNpub.substring(0, 16)}...`);
+      } catch (error) {
+        console.error('Failed to send token via Nostr:', error);
+        throw error;
+      }
+    },
+
+    /**
+     * Send encrypted DM via Nostr
+     * Generic method for sending any encrypted content
+     */
+    async sendEncryptedDM(content: string, recipientNpub: string) {
+      if (!this.ndk || !this.connected) {
+        throw new Error('Nostr not connected');
+      }
+
+      const recipientHex = nip19.decode(recipientNpub).data as string;
+      const encrypted = await nip04.encrypt(this.privateKey, recipientHex, content);
+
+      const dmEvent = new NDKEvent(this.ndk);
+      dmEvent.kind = 4;
+      dmEvent.content = encrypted;
+      dmEvent.tags = [['p', recipientHex]];
+
+      await dmEvent.publish();
+    },
+
+    /**
+     * Listen for incoming Nostr token notifications
+     * Auto-redeems tokens sent via Nostr fallback
+     */
+    async setupTokenNotificationListener() {
+      if (!this.ndk || !this.connected || !this.pubkey) return;
+
+      const filter: NDKFilter = {
+        kinds: [4], // Encrypted DMs
+        '#p': [this.pubkey],
+        since: Math.floor(Date.now() / 1000) - 86400, // Last 24 hours
+      };
+
+      const sub = this.ndk.subscribe(filter, { closeOnEose: false });
+
+      sub.on('event', async (event: NDKEvent) => {
+        try {
+          // Decrypt DM
+          const senderPubkey = event.pubkey;
+          const decrypted = await nip04.decrypt(
+            this.privateKey,
+            senderPubkey,
+            event.content
+          );
+
+          const data = JSON.parse(decrypted);
+
+          // Handle Bitpoints token notification
+          if (data.type === 'BITPOINTS_TOKEN') {
+            console.log('📨 Received token via Nostr from', data.senderNpub?.substring(0, 16));
+
+            // Auto-redeem the token
+            const receiveStore = useReceiveTokensStore();
+            const walletStore = useWalletStore();
+
+            receiveStore.receiveData.tokensBase64 = data.token;
+            await walletStore.redeem();
+
+            notifySuccess(
+              `Received tokens via Nostr from ${data.senderNickname || 'unknown'}!`
+            );
+          }
+        } catch (error) {
+          console.error('Failed to process Nostr DM:', error);
+        }
+      });
+
+      console.log('👂 Listening for Nostr token notifications');
+    },
   },
 });
