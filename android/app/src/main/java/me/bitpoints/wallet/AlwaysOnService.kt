@@ -309,7 +309,10 @@ class AlwaysOnService : Service(), BluetoothMeshDelegate {
     }
 
     override fun getNickname(): String? {
-        return "Always-On Service"
+        // Read user's configured nickname from shared preferences
+        // This matches the frontend's 'bluetooth-nickname' localStorage key
+        val prefs = getSharedPreferences("VueUseLocalStorage", Context.MODE_PRIVATE)
+        return prefs.getString("bluetooth-nickname", "Bitpoints User") ?: "Bitpoints User"
     }
 
     override fun isFavorite(peerID: String): Boolean {

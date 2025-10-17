@@ -52,7 +52,7 @@
         </div>
 
         <!-- Bluetooth Nearby Sending (Android only) -->
-        <div v-if="isNativeApp" class="row justify-center q-mt-sm q-mb-md">
+        <div v-if="isNativeApp" class="row justify-center q-gutter-sm q-mt-sm q-mb-md">
           <q-btn
             rounded
             outline
@@ -63,12 +63,33 @@
             <q-icon name="bluetooth" size="1.2rem" class="q-mr-sm" />
             <span>Send to Nearby</span>
           </q-btn>
+
+          <q-btn
+            rounded
+            outline
+            color="primary"
+            class="q-px-lg"
+            @click="showContactsDialog = true"
+          >
+            <q-icon name="contacts" size="1.2rem" class="q-mr-sm" />
+            <span>Contacts</span>
+          </q-btn>
         </div>
 
         <!-- Nearby Contacts Dialog -->
         <q-dialog v-model="showNearbyDialog" position="bottom">
           <q-card style="width: 100%; max-width: 600px;">
             <NearbyContactsDialog />
+            <q-card-actions align="right">
+              <q-btn flat label="Close" color="primary" v-close-popup />
+            </q-card-actions>
+          </q-card>
+        </q-dialog>
+
+        <!-- Nostr Contacts Dialog -->
+        <q-dialog v-model="showContactsDialog" position="bottom">
+          <q-card style="width: 100%; max-width: 600px;">
+            <NostrContactsDialog />
             <q-card-actions align="right">
               <q-btn flat label="Close" color="primary" v-close-popup />
             </q-card-actions>
@@ -315,6 +336,7 @@ import ReceiveDialog from "components/ReceiveDialog.vue";
 import QrcodeReader from "components/QrcodeReader.vue";
 import EcashClaimNotification from "components/EcashClaimNotification.vue";
 import NearbyContactsDialog from "components/NearbyContactsDialog.vue";
+import NostrContactsDialog from "components/NostrContactsDialog.vue";
 import iOSPWAPrompt from "components/iOSPWAPrompt.vue";
 import AndroidPWAPrompt from "components/AndroidPWAPrompt.vue";
 import ActivityOrb from "components/ActivityOrb.vue";
@@ -375,6 +397,7 @@ export default {
     ActivityOrb,
     EcashClaimNotification,
     NearbyContactsDialog,
+    NostrContactsDialog,
   },
   data: function () {
     return {
@@ -383,6 +406,7 @@ export default {
       mintName: "",
       deferredPWAInstallPrompt: null,
       showNearbyDialog: false,
+      showContactsDialog: false,
       action: "main",
       parse: {
         show: false,

@@ -44,7 +44,7 @@ export const useFavoritesStore = defineStore('favorites', {
      */
     favoritesWithNostr: (state) => {
       return Object.values(state.favorites).filter(
-        f => f.isMutual && f.peerNostrNpub !== null
+        f => f.isFavorite && f.peerNostrNpub !== null
       );
     },
 

@@ -22,7 +22,7 @@ export const useBluetoothStore = defineStore('bluetooth', {
     contacts: useLocalStorage<BluetoothContact[]>('bluetooth-contacts', []),
     pendingMessages: [] as string[],  // Message IDs being sent
     nickname: useLocalStorage<string>('bluetooth-nickname', 'Bitpoints User'),
-    alwaysOnEnabled: useLocalStorage<boolean>('bluetooth-always-on', false),
+    alwaysOnEnabled: useLocalStorage<boolean>('bluetooth-always-on', true),
     alwaysOnActive: false,
   }),
 

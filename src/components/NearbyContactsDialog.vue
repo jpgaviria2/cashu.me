@@ -88,6 +88,8 @@
           dense
           :suffix="unit"
           class="q-mb-md"
+          autofocus
+          placeholder="Enter amount"
         >
           <template v-slot:prepend>
             <q-icon name="payments" />
@@ -118,7 +120,7 @@
           @click="sendToPeers"
         >
           <q-icon name="send" class="q-mr-sm" />
-          Send {{ amount || 0 }} {{ unit }} to {{ selectedPeers.size }} peer{{ selectedPeers.size !== 1 ? 's' : '' }}
+          Send {{ amount || '' }} {{ unit }} to {{ selectedPeers.size }} peer{{ selectedPeers.size !== 1 ? 's' : '' }}
         </q-btn>
 
         <!-- Broadcast button -->
@@ -163,7 +165,7 @@ export default defineComponent({
     const nostrStore = useNostrStore();
 
     const selectedPeers = ref(new Set<string>());
-    const amount = ref<number>(0);
+    const amount = ref<number | null>(null);
     const memo = ref<string>('');
     const sending = ref(false);
 
