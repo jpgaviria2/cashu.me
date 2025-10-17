@@ -67,7 +67,13 @@ public class MainActivity extends BridgeActivity {
         
         IntentFilter filter = new IntentFilter(BATTERY_OPTIMIZATION_REQUEST);
         try {
-            registerReceiver(batteryOptimizationReceiver, filter);
+            // For Android 14+ (SDK 34+), we must specify RECEIVER_NOT_EXPORTED
+            // since this is a private app-specific broadcast
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                registerReceiver(batteryOptimizationReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+            } else {
+                registerReceiver(batteryOptimizationReceiver, filter);
+            }
             Log.d(TAG, "Battery optimization receiver registered");
         } catch (Exception e) {
             Log.e(TAG, "Failed to register battery optimization receiver", e);
