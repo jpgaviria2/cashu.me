@@ -248,7 +248,7 @@ export const useNostrStore = defineStore("nostr", {
     },
     initWalletSeedPrivateKeySigner: async function () {
       await this.walletSeedGenerateKeyPair();
-      // TODO: remove duplicate privateKeysigner
+      // Use the seed-based signer as the main private key signer
       this.privateKeySigner = this.seedSigner;
       this.signerType = SignerType.SEED;
       this.setSigner(this.privateKeySigner);

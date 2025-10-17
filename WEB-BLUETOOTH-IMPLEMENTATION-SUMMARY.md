@@ -789,3 +789,4 @@ The Web Bluetooth implementation was **technically successful** (code works corr
 **Project**: Bitpoints.me - Bitcoin-backed rewards wallet  
 **Repository**: https://github.com/jpgaviria2/cashu.me
 
+

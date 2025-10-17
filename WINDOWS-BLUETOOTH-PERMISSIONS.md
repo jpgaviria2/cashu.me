@@ -159,3 +159,4 @@ When the Electron app opens:
 
 This will help me identify if it's a Windows permission issue or a code issue.
 
+

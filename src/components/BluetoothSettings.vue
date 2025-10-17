@@ -137,6 +137,70 @@
 
     <q-separator />
 
+    <!-- Always-On Mode Section (Android only) -->
+    <q-card-section v-if="!isDesktop">
+      <div class="text-subtitle2 q-mb-sm">Always-On Mode</div>
+      <div class="text-caption text-grey-6 q-mb-sm">
+        For kids' devices without consistent internet - keeps Bluetooth mesh active 24/7
+      </div>
+      
+      <q-list dense>
+        <q-item>
+          <q-item-section avatar>
+            <q-icon 
+              :name="bluetoothStore.alwaysOnActive ? 'battery_charging_full' : 'battery_std'" 
+              :color="bluetoothStore.alwaysOnActive ? 'positive' : 'grey'"
+            />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>Always Keep Running</q-item-label>
+            <q-item-label caption>
+              {{ bluetoothStore.alwaysOnActive ? 'Active - Bluetooth mesh stays on 24/7' : 'Inactive - Normal battery usage' }}
+            </q-item-label>
+          </q-item-section>
+          <q-item-section side>
+            <q-toggle
+              :model-value="bluetoothStore.alwaysOnEnabled"
+              @update:model-value="toggleAlwaysOnMode"
+              color="primary"
+              :disable="!bluetoothStore.isActive"
+            />
+          </q-item-section>
+        </q-item>
+      </q-list>
+
+      <div class="q-mt-sm">
+        <q-btn
+          v-if="bluetoothStore.alwaysOnEnabled"
+          flat
+          dense
+          size="sm"
+          color="primary"
+          icon="settings"
+          label="Battery Settings"
+          @click="requestBatteryOptimization"
+        />
+      </div>
+
+      <!-- Warning banner -->
+      <q-banner 
+        v-if="bluetoothStore.alwaysOnEnabled" 
+        dense 
+        class="bg-warning text-dark q-mt-sm" 
+        rounded
+      >
+        <template v-slot:avatar>
+          <q-icon name="battery_alert" />
+        </template>
+        <strong>Battery Usage:</strong> Always-on mode uses more battery but ensures you can receive tokens anytime.
+        <template v-slot:action>
+          <q-btn flat dense size="sm" label="Learn More" @click="showBatteryInfo" />
+        </template>
+      </q-banner>
+    </q-card-section>
+
+    <q-separator />
+
     <q-card-section>
       <div class="row q-gutter-sm">
         <q-btn
@@ -243,8 +307,35 @@ function showFavorites() {
   console.log('Show favorites dialog');
 }
 
-onMounted(() => {
+async function toggleAlwaysOnMode(enabled: boolean) {
+  try {
+    await bluetoothStore.toggleAlwaysOnMode(enabled);
+  } catch (error) {
+    console.error('Failed to toggle always-on mode:', error);
+  }
+}
+
+async function requestBatteryOptimization() {
+  try {
+    await bluetoothStore.requestBatteryOptimizationExemption();
+  } catch (error) {
+    console.error('Failed to request battery optimization exemption:', error);
+  }
+}
+
+function showBatteryInfo() {
+  // Show info about battery usage
+  console.log('Show battery usage information');
+  // TODO: Implement battery info dialog
+}
+
+onMounted(async () => {
   localNickname.value = bluetoothStore.nickname;
+  
+  // Check always-on status on mount
+  if (!isDesktop.value) {
+    await bluetoothStore.checkAlwaysOnStatus();
+  }
 });
 </script>
 

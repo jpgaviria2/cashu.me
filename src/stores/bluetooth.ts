@@ -22,6 +22,8 @@ export const useBluetoothStore = defineStore('bluetooth', {
     contacts: useLocalStorage<BluetoothContact[]>('bluetooth-contacts', []),
     pendingMessages: [] as string[],  // Message IDs being sent
     nickname: useLocalStorage<string>('bluetooth-nickname', 'Bitpoints User'),
+    alwaysOnEnabled: useLocalStorage<boolean>('bluetooth-always-on', false),
+    alwaysOnActive: false,
   }),
 
   getters: {
@@ -514,10 +516,118 @@ export const useBluetoothStore = defineStore('bluetooth', {
     async syncContactsToNostr() {
       try {
         const nostrStore = useNostrStore();
-        // TODO: Implement NIP-02 contact list publishing
-        console.log('TODO: Sync contacts to Nostr', this.contacts);
+        // Note: NIP-02 contact list publishing will be implemented in future version
+        // For now, contacts are stored locally and synced via favorites system
+        console.log('Contacts sync to Nostr planned for future release', this.contacts.length, 'contacts');
       } catch (e) {
         console.error('Failed to sync contacts to Nostr:', e);
+      }
+    },
+
+    /**
+     * Start always-on mode (Android only)
+     */
+    async startAlwaysOnMode() {
+      if (!Capacitor.isNativePlatform()) {
+        notifyWarning('Always-on mode is only available on Android devices');
+        return;
+      }
+
+      try {
+        const result = await BluetoothEcash.startAlwaysOnMode();
+        
+        if (result.success) {
+          this.alwaysOnActive = true;
+          notifySuccess('Always-on mode started. Bluetooth mesh will stay active 24/7.');
+          console.log('Always-on mode started:', result.message);
+        } else {
+          notifyError('Failed to start always-on mode');
+        }
+      } catch (error) {
+        console.error('Error starting always-on mode:', error);
+        notifyError(`Failed to start always-on mode: ${error.message}`);
+      }
+    },
+
+    /**
+     * Stop always-on mode (Android only)
+     */
+    async stopAlwaysOnMode() {
+      if (!Capacitor.isNativePlatform()) {
+        notifyWarning('Always-on mode is only available on Android devices');
+        return;
+      }
+
+      try {
+        const result = await BluetoothEcash.stopAlwaysOnMode();
+        
+        if (result.success) {
+          this.alwaysOnActive = false;
+          this.alwaysOnEnabled = false;
+          notifySuccess('Always-on mode stopped');
+          console.log('Always-on mode stopped:', result.message);
+        } else {
+          notifyError('Failed to stop always-on mode');
+        }
+      } catch (error) {
+        console.error('Error stopping always-on mode:', error);
+        notifyError(`Failed to stop always-on mode: ${error.message}`);
+      }
+    },
+
+    /**
+     * Check if always-on mode is active
+     */
+    async checkAlwaysOnStatus() {
+      if (!Capacitor.isNativePlatform()) {
+        this.alwaysOnActive = false;
+        return;
+      }
+
+      try {
+        const result = await BluetoothEcash.isAlwaysOnActive();
+        this.alwaysOnActive = result.isActive;
+        console.log('Always-on status checked:', this.alwaysOnActive);
+      } catch (error) {
+        console.error('Error checking always-on status:', error);
+        this.alwaysOnActive = false;
+      }
+    },
+
+    /**
+     * Toggle always-on mode
+     */
+    async toggleAlwaysOnMode(enabled: boolean) {
+      this.alwaysOnEnabled = enabled;
+
+      if (enabled) {
+        await this.startAlwaysOnMode();
+      } else {
+        await this.stopAlwaysOnMode();
+      }
+    },
+
+    /**
+     * Request battery optimization exemption
+     */
+    async requestBatteryOptimizationExemption() {
+      if (!Capacitor.isNativePlatform()) {
+        notifyWarning('Battery optimization settings are only available on Android devices');
+        return;
+      }
+
+      try {
+        const result = await BluetoothEcash.requestBatteryOptimizationExemption();
+        
+        if (result.success) {
+          notifySuccess('Battery optimization dialog opened. Please allow Bitpoints to run in background.');
+          console.log('Battery optimization exemption requested:', result.message);
+        } else {
+          notifyError('Failed to open battery optimization settings');
+        }
+      } catch (error) {
+        console.error('Error requesting battery optimization exemption:', error);
+        notifyError(`Failed to open battery settings: ${error.message}`);
       }
     },
   },

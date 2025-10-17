@@ -449,5 +449,93 @@ class BluetoothEcashPlugin : Plugin() {
         bluetoothService?.destroy()
         super.handleOnDestroy()
     }
+
+    /**
+     * Start always-on mode (foreground service)
+     */
+    @PluginMethod
+    fun startAlwaysOnMode(call: PluginCall) {
+        try {
+            val intent = Intent(context, AlwaysOnService::class.java).apply {
+                action = AlwaysOnService.ACTION_START_SERVICE
+            }
+            
+            context.startForegroundService(intent)
+            
+            val ret = JSObject()
+            ret.put("success", true)
+            ret.put("message", "Always-on mode started")
+            call.resolve(ret)
+            
+            Log.d(TAG, "Always-on mode started")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to start always-on mode", e)
+            call.reject("Failed to start always-on mode: ${e.message}")
+        }
+    }
+
+    /**
+     * Stop always-on mode
+     */
+    @PluginMethod
+    fun stopAlwaysOnMode(call: PluginCall) {
+        try {
+            val intent = Intent(context, AlwaysOnService::class.java).apply {
+                action = AlwaysOnService.ACTION_STOP_SERVICE
+            }
+            
+            context.startService(intent)
+            
+            val ret = JSObject()
+            ret.put("success", true)
+            ret.put("message", "Always-on mode stopped")
+            call.resolve(ret)
+            
+            Log.d(TAG, "Always-on mode stopped")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to stop always-on mode", e)
+            call.reject("Failed to stop always-on mode: ${e.message}")
+        }
+    }
+
+    /**
+     * Check if always-on mode is active
+     */
+    @PluginMethod
+    fun isAlwaysOnActive(call: PluginCall) {
+        try {
+            val ret = JSObject()
+            ret.put("isActive", AlwaysOnService.isServiceRunning)
+            call.resolve(ret)
+            
+            Log.d(TAG, "Always-on status checked: ${AlwaysOnService.isServiceRunning}")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to check always-on status", e)
+            call.reject("Failed to check always-on status: ${e.message}")
+        }
+    }
+
+    /**
+     * Request battery optimization exemption
+     */
+    @PluginMethod
+    fun requestBatteryOptimizationExemption(call: PluginCall) {
+        try {
+            // This needs to be called from the main activity context
+            // We'll notify the main activity to show the dialog
+            val intent = Intent("me.bitpoints.wallet.REQUEST_BATTERY_OPTIMIZATION")
+            context.sendBroadcast(intent)
+            
+            val ret = JSObject()
+            ret.put("success", true)
+            ret.put("message", "Battery optimization dialog requested")
+            call.resolve(ret)
+            
+            Log.d(TAG, "Battery optimization exemption requested")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to request battery optimization exemption", e)
+            call.reject("Failed to request battery optimization exemption: ${e.message}")
+        }
+    }
 }
 

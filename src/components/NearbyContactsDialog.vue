@@ -366,8 +366,8 @@ export default defineComponent({
         );
         notifySuccess(`Added ${peer.nickname} to favorites`);
         
-        // TODO: Send favorite notification via Bluetooth
-        // await bluetoothStore.sendFavoriteNotification(peer.peerID, true);
+        // Note: Favorite notification via Bluetooth will be implemented in future version
+        // This would notify the peer that they've been favorited
       }
     };
 
