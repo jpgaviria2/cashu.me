@@ -416,7 +416,13 @@ export default {
     ...mapState(useUiStore, ["tickerShort"]),
     isNativeApp: function () {
       // @ts-ignore
-      return !!window?.Capacitor;
+      // Electron should be treated as desktop, not native
+      if (window?.Capacitor && typeof window.Capacitor.getPlatform === 'function') {
+        const platform = window.Capacitor.getPlatform();
+        // Only Android and iOS are truly native
+        return platform === 'android' || platform === 'ios';
+      }
+      return false;
     },
     ...mapWritableState(useUiStore, [
       "showInvoiceDetails",
