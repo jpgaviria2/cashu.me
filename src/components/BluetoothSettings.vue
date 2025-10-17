@@ -51,6 +51,14 @@
     <q-card-section>
       <div class="text-subtitle2 q-mb-sm">Connection Status</div>
       
+      <!-- Desktop help text -->
+      <q-banner v-if="isDesktop && !bluetoothStore.isActive" dense class="bg-info text-white q-mb-sm" rounded>
+        <template v-slot:avatar>
+          <q-icon name="info" />
+        </template>
+        Click "Connect Device" to enable Bluetooth. Your browser will show available devices.
+      </q-banner>
+      
       <q-list dense>
         <q-item>
           <q-item-section avatar>
@@ -76,7 +84,11 @@
               label="Connect Device"
               @click="connectDesktopDevice"
               :disable="!isWebBluetoothSupported"
-            />
+            >
+              <q-tooltip v-if="!isWebBluetoothSupported">
+                Web Bluetooth not supported in this browser. Try Chrome or Edge.
+              </q-tooltip>
+            </q-btn>
             <!-- Desktop: Show disconnect button when active -->
             <q-btn
               v-else-if="isDesktop && bluetoothStore.isActive"

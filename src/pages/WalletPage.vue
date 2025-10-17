@@ -681,17 +681,20 @@ export default {
       };
     },
     initializeBluetooth: async function () {
-      // Only initialize Bluetooth for native Android app
-      if (!this.isNativeApp) {
-        console.log('Skipping Bluetooth init - not a native app');
-        return;
-      }
-
       try {
         const bluetoothStore = useBluetoothStore();
+        // Only initialize the store (setup event listeners, etc)
         await bluetoothStore.initialize();
-        await bluetoothStore.startService();
-        console.log('Bluetooth mesh service initialized');
+        
+        // For desktop PWA: Don't auto-start - Web Bluetooth requires user gesture
+        // User MUST click "Connect Device" button in Settings to enable
+        if (this.isNativeApp) {
+          // Only auto-start for native mobile apps
+          await bluetoothStore.startService();
+          console.log('Bluetooth mesh service auto-started (native app)');
+        } else {
+          console.log('💡 Bluetooth ready. Go to Settings → Bluetooth Mesh and click "Connect Device" to enable.');
+        }
       } catch (e) {
         console.error('Failed to initialize Bluetooth:', e);
       }
