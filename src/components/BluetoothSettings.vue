@@ -109,7 +109,7 @@
           </q-item-section>
         </q-item>
 
-        <q-item>
+        <q-item clickable v-ripple @click="openNearbyDialog">
           <q-item-section avatar>
             <q-icon name="people" />
           </q-item-section>
@@ -118,6 +118,9 @@
             <q-item-label caption>
               {{ bluetoothStore.nearbyPeers.length }} discovered
             </q-item-label>
+          </q-item-section>
+          <q-item-section side>
+            <q-icon name="chevron_right" color="grey" />
           </q-item-section>
         </q-item>
 
@@ -247,6 +250,11 @@ import { useFavoritesStore } from 'src/stores/favorites';
 import { Capacitor } from '@capacitor/core';
 import { notifySuccess } from 'src/js/notify';
 
+const emit = defineEmits<{
+  (e: 'openNearbyDialog'): void;
+  (e: 'openContactsDialog'): void;
+}>();
+
 const bluetoothStore = useBluetoothStore();
 const favoritesStore = useFavoritesStore();
 
@@ -297,14 +305,16 @@ async function connectDesktopDevice() {
   }
 }
 
+function openNearbyDialog() {
+  emit('openNearbyDialog');
+}
+
 function showNearbyContacts() {
-  // Emit event or navigate to nearby contacts
-  console.log('Show nearby contacts dialog');
+  emit('openNearbyDialog');
 }
 
 function showFavorites() {
-  // Emit event or navigate to favorites dialog
-  console.log('Show favorites dialog');
+  emit('openContactsDialog');
 }
 
 async function toggleAlwaysOnMode(enabled: boolean) {

@@ -42,7 +42,12 @@
               </q-icon>
             </q-item-label>
             <q-item-label caption>
-              {{ formatNpub(contact.peerNostrNpub) }}
+              <span v-if="contact.peerNostrNpub">
+                {{ formatNpub(contact.peerNostrNpub) }}
+              </span>
+              <span v-else class="text-warning">
+                <q-icon name="warning" size="xs" /> No Nostr key - Bluetooth only
+              </span>
             </q-item-label>
           </q-item-section>
 
@@ -52,10 +57,13 @@
               dense
               round
               icon="send"
-              color="primary"
+              :color="contact.peerNostrNpub ? 'primary' : 'grey'"
+              :disable="!contact.peerNostrNpub"
               @click.stop="openSendDialog(contact)"
             >
-              <q-tooltip>Send ecash via Nostr</q-tooltip>
+              <q-tooltip>
+                {{ contact.peerNostrNpub ? 'Send ecash via Nostr' : 'Nostr key required for remote send' }}
+              </q-tooltip>
             </q-btn>
           </q-item-section>
         </q-item>
@@ -111,9 +119,9 @@
 
           <q-card-actions align="right" class="q-pa-md">
             <q-btn flat label="Cancel" color="grey" @click="closeSendDialog" />
-            <q-btn 
-              color="primary" 
-              label="Send" 
+            <q-btn
+              color="primary"
+              label="Send"
               @click="sendViaNostr"
               :loading="sending"
               :disable="!sendAmount || sendAmount <= 0"
@@ -154,8 +162,9 @@ export default defineComponent({
     const sending = ref(false);
 
     const contacts = computed(() => {
-      // Get all favorites with Nostr npub
-      return favoritesStore.favoritesWithNostr;
+      // Get ALL favorites (with and without Nostr npub)
+      // Show warning for those without Nostr capability
+      return favoritesStore.myFavorites;
     });
 
     const unit = computed(() => mintsStore.activeUnit);

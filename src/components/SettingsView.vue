@@ -92,8 +92,31 @@
     </div>
 
     <div class="q-py-sm q-px-xs text-left">
-      <BluetoothSettings />
+      <BluetoothSettings 
+        @openNearbyDialog="showNearbyDialog = true"
+        @openContactsDialog="showContactsDialog = true"
+      />
     </div>
+
+    <!-- Nearby Contacts Dialog -->
+    <q-dialog v-model="showNearbyDialog" position="bottom">
+      <q-card style="width: 100%; max-width: 600px;">
+        <NearbyContactsDialog @close="showNearbyDialog = false" />
+        <q-card-actions align="right">
+          <q-btn flat label="Close" color="primary" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+    <!-- Nostr Contacts Dialog -->
+    <q-dialog v-model="showContactsDialog" position="bottom">
+      <q-card style="width: 100%; max-width: 600px;">
+        <NostrContactsDialog />
+        <q-card-actions align="right">
+          <q-btn flat label="Close" color="primary" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
 
     <!-- TERMS & LEGAL SECTION -->
     <div class="section-divider q-my-md">
@@ -1949,6 +1972,8 @@ import P2PKDialog from "./P2PKDialog.vue";
 import NWCDialog from "./NWCDialog.vue";
 import ChooseMint from "./ChooseMint.vue";
 import BluetoothSettings from "./BluetoothSettings.vue";
+import NearbyContactsDialog from "./NearbyContactsDialog.vue";
+import NostrContactsDialog from "./NostrContactsDialog.vue";
 import VueQrcode from "@chenfengyuan/vue-qrcode";
 
 import { getShortUrl } from "src/js/wallet-helpers";
@@ -1983,11 +2008,15 @@ export default defineComponent({
     NWCDialog,
     ChooseMint,
     BluetoothSettings,
+    NearbyContactsDialog,
+    NostrContactsDialog,
     VueQrcode,
   },
   props: {},
   data: function () {
     return {
+      showNearbyDialog: false,
+      showContactsDialog: false,
       themes: [
         "monochrome",
         "classic",

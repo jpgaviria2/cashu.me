@@ -79,7 +79,7 @@
         <!-- Nearby Contacts Dialog -->
         <q-dialog v-model="showNearbyDialog" position="bottom">
           <q-card style="width: 100%; max-width: 600px;">
-            <NearbyContactsDialog />
+            <NearbyContactsDialog @close="showNearbyDialog = false" />
             <q-card-actions align="right">
               <q-btn flat label="Close" color="primary" v-close-popup />
             </q-card-actions>
@@ -715,7 +715,7 @@ export default {
         const bluetoothStore = useBluetoothStore();
         // Only initialize the store (setup event listeners, etc)
         await bluetoothStore.initialize();
-        
+
         // For desktop PWA: Don't auto-start - Web Bluetooth requires user gesture
         // User MUST click "Connect Device" button in Settings to enable
         if (this.isNativeApp) {

@@ -39,9 +39,9 @@
           <q-item-section>
             <q-item-label>
               {{ peer.nickname || peer.nostrNpub?.substring(0, 16) || peer.peerID.substring(0, 8) }}...
-              <q-icon 
+              <q-icon
                 v-if="isMutualFavorite(peer.peerID)"
-                name="favorite" 
+                name="favorite"
                 color="pink"
                 size="xs"
                 class="q-ml-xs"
@@ -155,7 +155,9 @@ import { Peer } from 'src/plugins/bluetooth-ecash';
 export default defineComponent({
   name: 'NearbyContactsDialog',
 
-  setup() {
+  emits: ['close'],
+
+  setup(props, { emit }) {
     const bluetoothStore = useBluetoothStore();
     const favoritesStore = useFavoritesStore();
     const walletStore = useWalletStore();
@@ -228,7 +230,7 @@ export default defineComponent({
           console.log('🟢 [UI] About to call bluetoothStore.sendToken for peer:', peerID);
           console.log('🟢 [UI] Token:', tokenBase64.substring(0, 50) + '...');
           console.log('🟢 [UI] Amount:', sendAmount, unit.value);
-          
+
           const messageId = await bluetoothStore.sendToken({
             token: tokenBase64,
             amount: sendAmount,
@@ -240,7 +242,7 @@ export default defineComponent({
           });
 
           console.log('🟢 [UI] sendToken returned:', messageId);
-          
+
           if (messageId) {
             successCount++;
           }
@@ -259,9 +261,12 @@ export default defineComponent({
           notifySuccess(`Sent ${amount.value} ${unit.value} to ${successCount} peer${successCount !== 1 ? 's' : ''}`);
 
           // Reset form
-          amount.value = 0;
+          amount.value = null;
           memo.value = '';
           selectedPeers.value.clear();
+          
+          // Close dialog after successful send
+          emit('close');
         }
 
       } catch (e) {
@@ -326,8 +331,11 @@ export default defineComponent({
           notifySuccess(`Broadcasting ${amount.value} ${unit.value} to all nearby devices`);
 
           // Reset form
-          amount.value = 0;
+          amount.value = null;
           memo.value = '';
+          
+          // Close dialog after successful broadcast
+          emit('close');
         }
 
       } catch (e) {
@@ -367,7 +375,7 @@ export default defineComponent({
           peer.nostrNpub || null
         );
         notifySuccess(`Added ${peer.nickname} to favorites`);
-        
+
         // Note: Favorite notification via Bluetooth will be implemented in future version
         // This would notify the peer that they've been favorited
       }
