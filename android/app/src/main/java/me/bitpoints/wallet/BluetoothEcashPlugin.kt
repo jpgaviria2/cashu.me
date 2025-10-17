@@ -31,7 +31,6 @@ import me.bitpoints.wallet.mesh.PeerInfo
         Permission(strings = [Manifest.permission.BLUETOOTH_ADVERTISE], alias = "bluetoothAdvertise"),
         Permission(strings = [Manifest.permission.BLUETOOTH_CONNECT], alias = "bluetoothConnect"),
         Permission(strings = [Manifest.permission.BLUETOOTH_SCAN], alias = "bluetoothScan"),
-        Permission(strings = [Manifest.permission.ACCESS_FINE_LOCATION], alias = "location"),
         Permission(strings = [Manifest.permission.POST_NOTIFICATIONS], alias = "notifications")
     ]
 )
@@ -395,14 +394,15 @@ class BluetoothEcashPlugin : Plugin() {
      */
     private fun getRequiredPermissions(): Array<String> {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            // Android 12+ (SDK 31+): No location required with neverForLocation flag
             arrayOf(
                 Manifest.permission.BLUETOOTH_ADVERTISE,
                 Manifest.permission.BLUETOOTH_CONNECT,
                 Manifest.permission.BLUETOOTH_SCAN,
-                Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.POST_NOTIFICATIONS
             )
         } else {
+            // Android 11 and below: Location required for BLE scanning
             arrayOf(
                 Manifest.permission.BLUETOOTH,
                 Manifest.permission.BLUETOOTH_ADMIN,
