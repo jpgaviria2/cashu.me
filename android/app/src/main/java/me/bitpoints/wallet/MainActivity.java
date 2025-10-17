@@ -1,19 +1,24 @@
 package me.bitpoints.wallet;
 
+import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
     private static final String TAG = "MainActivity";
     private static final String BATTERY_OPTIMIZATION_REQUEST = "me.bitpoints.wallet.REQUEST_BATTERY_OPTIMIZATION";
+    private static final int CAMERA_PERMISSION_REQUEST = 1001;
     
     private BroadcastReceiver batteryOptimizationReceiver;
 
@@ -34,7 +39,7 @@ public class MainActivity extends BridgeActivity {
     }
     
     @Override
-    protected void onDestroy() {
+    public void onDestroy() {
         super.onDestroy();
         if (batteryOptimizationReceiver != null) {
             try {
@@ -84,6 +89,28 @@ public class MainActivity extends BridgeActivity {
             }
         } catch (Exception e) {
             Log.e(TAG, "Failed to open battery optimization settings", e);
+        }
+    }
+
+    public boolean checkCameraPermission() {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    public void requestCameraPermission() {
+        if (!checkCameraPermission()) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, CAMERA_PERMISSION_REQUEST);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == CAMERA_PERMISSION_REQUEST) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Log.d(TAG, "Camera permission granted");
+            } else {
+                Log.w(TAG, "Camera permission denied");
+            }
         }
     }
 }

@@ -15,6 +15,7 @@ import me.bitpoints.wallet.mesh.BluetoothMeshService
 import me.bitpoints.wallet.mesh.BluetoothMeshDelegate
 import me.bitpoints.wallet.model.BitchatMessage
 import me.bitpoints.wallet.model.EcashMessage
+import me.bitpoints.wallet.R
 
 /**
  * Always-On Foreground Service for Kids' Devices
@@ -164,7 +165,7 @@ class AlwaysOnService : Service(), BluetoothMeshDelegate {
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Bitpoints Mesh Active")
             .setContentText(statusText)
-            .setSmallIcon(R.drawable.ic_bluetooth_connected) // Use existing Bluetooth icon
+            .setSmallIcon(android.R.drawable.ic_dialog_info) // Use system icon
             .setContentIntent(pendingIntent)
             .setOngoing(true)
             .setAutoCancel(false)
@@ -217,7 +218,7 @@ class AlwaysOnService : Service(), BluetoothMeshDelegate {
      */
     private fun startBluetoothMesh() {
         try {
-            bluetoothMeshService?.startService()
+            bluetoothMeshService?.startServices()
             isBluetoothActive = true
             Log.d(TAG, "Bluetooth mesh started")
             updateNotification()
@@ -233,7 +234,7 @@ class AlwaysOnService : Service(), BluetoothMeshDelegate {
      */
     private fun stopBluetoothMesh() {
         try {
-            bluetoothMeshService?.stopService()
+            bluetoothMeshService?.stopServices()
             isBluetoothActive = false
             peerCount = 0
             Log.d(TAG, "Bluetooth mesh stopped")
@@ -275,65 +276,45 @@ class AlwaysOnService : Service(), BluetoothMeshDelegate {
     }
 
     // BluetoothMeshDelegate implementations
-    override fun onPeerDiscovered(peerID: String, nickname: String?) {
+    override fun didReceiveMessage(message: BitchatMessage) {
         lastActivityTime = System.currentTimeMillis()
-        Log.d(TAG, "Peer discovered: $peerID")
+        Log.d(TAG, "Message received from ${message.senderPeerID}")
+    }
+
+    override fun didUpdatePeerList(peers: List<String>) {
+        lastActivityTime = System.currentTimeMillis()
+        peerCount = peers.size
+        Log.d(TAG, "Peer list updated: $peerCount peers")
         updateNotification()
     }
 
-    override fun onPeerLost(peerID: String) {
+    override fun didReceiveChannelLeave(channel: String, fromPeer: String) {
         lastActivityTime = System.currentTimeMillis()
-        Log.d(TAG, "Peer lost: $peerID")
-        updateNotification()
+        Log.d(TAG, "Channel leave: $channel from $fromPeer")
     }
 
-    override fun onMessageReceived(message: BitchatMessage) {
+    override fun didReceiveDeliveryAck(messageID: String, recipientPeerID: String) {
         lastActivityTime = System.currentTimeMillis()
-        Log.d(TAG, "Message received from ${message.senderID}")
+        Log.d(TAG, "Message delivered: $messageID to $recipientPeerID")
     }
 
-    override fun onEcashMessageReceived(message: EcashMessage) {
+    override fun didReceiveReadReceipt(messageID: String, recipientPeerID: String) {
         lastActivityTime = System.currentTimeMillis()
-        Log.d(TAG, "Ecash received: ${message.amount} ${message.unit}")
-        
-        // Update notification to show activity
-        updateNotification()
+        Log.d(TAG, "Read receipt: $messageID from $recipientPeerID")
     }
 
-    override fun onMessageDelivered(messageID: String, recipientID: String) {
-        lastActivityTime = System.currentTimeMillis()
-        Log.d(TAG, "Message delivered: $messageID to $recipientID")
+    override fun decryptChannelMessage(encryptedContent: ByteArray, channel: String): String? {
+        // Not implemented for always-on service
+        return null
     }
 
-    override fun onMessageFailed(messageID: String, reason: String) {
-        lastActivityTime = System.currentTimeMillis()
-        Log.w(TAG, "Message failed: $messageID - $reason")
+    override fun getNickname(): String? {
+        return "Always-On Service"
     }
 
-    override fun onConnectionEstablished(peerID: String) {
-        peerCount++
-        lastActivityTime = System.currentTimeMillis()
-        Log.d(TAG, "Connection established with $peerID (total: $peerCount)")
-        updateNotification()
-    }
-
-    override fun onConnectionLost(peerID: String) {
-        peerCount = maxOf(0, peerCount - 1)
-        lastActivityTime = System.currentTimeMillis()
-        Log.d(TAG, "Connection lost with $peerID (total: $peerCount)")
-        updateNotification()
-    }
-
-    override fun onServiceError(error: String) {
-        Log.e(TAG, "Bluetooth mesh error: $error")
-        isBluetoothActive = false
-        updateNotification()
-    }
-
-    override fun onServiceStatusChanged(isActive: Boolean) {
-        isBluetoothActive = isActive
-        Log.d(TAG, "Bluetooth mesh status changed: $isActive")
-        updateNotification()
+    override fun isFavorite(peerID: String): Boolean {
+        // Not implemented for always-on service
+        return false
     }
 }
 
