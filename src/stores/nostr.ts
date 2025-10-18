@@ -288,6 +288,16 @@ export const useNostrStore = defineStore("nostr", {
       recipient: string,
       message: string
     ) {
+      // Decode npub to hex if necessary
+      let recipientPubkeyHex = recipient;
+      if (recipient.startsWith('npub1')) {
+        const decoded = nip19.decode(recipient);
+        if (decoded.type === 'npub') {
+          recipientPubkeyHex = decoded.data as string;
+          console.log(`📤 Decoded npub to hex: ${recipientPubkeyHex.substring(0, 16)}...`);
+        }
+      }
+
       const randomPrivateKey = generateSecretKey();
       const randomPublicKey = getPublicKey(randomPrivateKey);
       // const randomPrivateKey = hexToBytes(this.seedSignerPrivateKey);
@@ -299,8 +309,8 @@ export const useNostrStore = defineStore("nostr", {
       const event = new NDKEvent(ndk);
       ndk.connect();
       event.kind = NDKKind.EncryptedDirectMessage;
-      event.content = await nip04.encrypt(randomPrivateKey, recipient, message);
-      event.tags = [["p", recipient]];
+      event.content = await nip04.encrypt(randomPrivateKey, recipientPubkeyHex, message);
+      event.tags = [["p", recipientPubkeyHex]];
       event.sign();
       try {
         await event.publish();
