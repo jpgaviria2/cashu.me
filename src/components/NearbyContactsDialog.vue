@@ -151,6 +151,7 @@ import { useTokensStore } from 'src/stores/tokens';
 import { useNostrStore } from 'src/stores/nostr';
 import { notifySuccess, notifyError } from 'src/js/notify';
 import { Peer } from 'src/plugins/bluetooth-ecash';
+import { nip19 } from 'nostr-tools';
 
 export default defineComponent({
   name: 'NearbyContactsDialog',
@@ -365,21 +366,29 @@ export default defineComponent({
 
     const toggleFavorite = async (peer: Peer) => {
       const isCurrentlyFavorite = isFavorite(peer.peerID);
-      
+
       if (isCurrentlyFavorite) {
         // Remove from favorites
         favoritesStore.removeFavorite(peer.peerID);
-        
-        // Send unfavorite notification via Bluetooth
-        if (nostrStore.pubkey) {
-          try {
-            await bluetoothStore.sendTextMessage(peer.peerID, `[UNFAVORITED]:${nostrStore.pubkey}`);
-            console.log(`📤 Sent unfavorite notification to ${peer.nickname}`);
-          } catch (error) {
-            console.error('Failed to send unfavorite notification:', error);
+
+        // Send unfavorite notification via Bluetooth with wallet-derived npub
+        try {
+          // Generate npub from wallet seed if not already set
+          if (!nostrStore.seedSignerPublicKey) {
+            await nostrStore.walletSeedGenerateKeyPair();
           }
+          
+          const hexPubkey = nostrStore.seedSignerPublicKey || nostrStore.pubkey;
+          if (hexPubkey) {
+            // Convert hex pubkey to npub format using bech32
+            const npub = hexPubkey.startsWith('npub') ? hexPubkey : nip19.npubEncode(hexPubkey);
+            await bluetoothStore.sendTextMessage(peer.peerID, `[UNFAVORITED]:${npub}`);
+            console.log(`📤 Sent unfavorite notification to ${peer.nickname} with npub: ${npub.substring(0, 16)}...`);
+          }
+        } catch (error) {
+          console.error('Failed to send unfavorite notification:', error);
         }
-        
+
         notifySuccess(`Removed ${peer.nickname} from favorites`);
       } else {
         // Add to favorites
@@ -388,17 +397,25 @@ export default defineComponent({
           peer.nickname || 'Unknown',
           peer.nostrNpub || null
         );
-        
+
         // Send favorite notification with our Nostr npub via Bluetooth
-        if (nostrStore.pubkey) {
-          try {
-            await bluetoothStore.sendTextMessage(peer.peerID, `[FAVORITED]:${nostrStore.pubkey}`);
-            console.log(`📤 Sent favorite notification with npub to ${peer.nickname}`);
-          } catch (error) {
-            console.error('Failed to send favorite notification:', error);
+        try {
+          // Generate npub from wallet seed if not already set
+          if (!nostrStore.seedSignerPublicKey) {
+            await nostrStore.walletSeedGenerateKeyPair();
           }
+          
+          const hexPubkey = nostrStore.seedSignerPublicKey || nostrStore.pubkey;
+          if (hexPubkey) {
+            // Convert hex pubkey to npub format using bech32
+            const npub = hexPubkey.startsWith('npub') ? hexPubkey : nip19.npubEncode(hexPubkey);
+            await bluetoothStore.sendTextMessage(peer.peerID, `[FAVORITED]:${npub}`);
+            console.log(`📤 Sent favorite notification to ${peer.nickname} with npub: ${npub.substring(0, 16)}...`);
+          }
+        } catch (error) {
+          console.error('Failed to send favorite notification:', error);
         }
-        
+
         notifySuccess(`Added ${peer.nickname} to favorites`);
       }
     };
