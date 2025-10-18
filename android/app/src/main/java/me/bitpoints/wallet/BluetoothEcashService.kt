@@ -59,8 +59,8 @@ class BluetoothEcashService(private val context: Context) {
                 Log.d(TAG, "Received TEXT message: ${content.take(50)}...")
 
                 // Handle favorite notifications (matches bitchat implementation)
-                if (content.startsWith("[FAVORITE_REQUEST]:") || 
-                    content.startsWith("[FAVORITE_ACCEPTED]:") || 
+                if (content.startsWith("[FAVORITE_REQUEST]:") ||
+                    content.startsWith("[FAVORITE_ACCEPTED]:") ||
                     content.startsWith("[UNFAVORITED]:")) {
                     Log.i(TAG, "🔔 FAVORITE NOTIFICATION DETECTED: ${content.substring(0, 30)}...")
                     handleFavoriteNotification(content, message.senderPeerID ?: "unknown", message.sender)

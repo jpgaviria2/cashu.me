@@ -986,6 +986,10 @@ export default {
       this.subscribeToNip17DirectMessages();
     }
 
+    // Subscribe to NIP-04 DMs for Nostr contacts feature
+    console.log('🔔 Subscribing to NIP-04 DMs for contacts...');
+    this.subscribeToNip04DirectMessages();
+
     // start invoice checker worker
     this.startInvoiceCheckerWorker();
 
