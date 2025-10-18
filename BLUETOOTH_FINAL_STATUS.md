@@ -173,3 +173,6 @@ You've built an **80% working solution**:
 
 **The QR code fallback is actually a FEATURE, not a bug!** It ensures 100% reliability even when Bluetooth fails (out of range, permissions, etc.).
 
+
+
+

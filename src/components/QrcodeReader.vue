@@ -79,39 +79,39 @@ export default {
       try {
         // First try the web API approach (works on most platforms)
         console.log('📷 Requesting camera permission via getUserMedia...');
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { 
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
             facingMode: 'environment',
             width: { ideal: 1280 },
             height: { ideal: 720 }
-          } 
+          }
         });
-        
+
         // Close the stream immediately after getting permission
         stream.getTracks().forEach(track => track.stop());
         console.log('✅ Camera permission granted via getUserMedia');
         return true;
-        
+
       } catch (webError) {
         console.warn('❌ getUserMedia failed, trying Capacitor Camera plugin...', webError);
-        
+
         try {
           // Fallback to Capacitor Camera plugin
           const { Camera } = await import('@capacitor/camera');
-          
+
           // Check current permissions
           const permissions = await Camera.checkPermissions();
           console.log('📷 Current camera permissions:', permissions);
-          
+
           if (permissions.camera === 'granted') {
             console.log('✅ Camera permission already granted via Capacitor');
             return true;
           }
-          
+
           // Request camera permission
           const requestResult = await Camera.requestPermissions();
           console.log('📷 Camera permission request result:', requestResult);
-          
+
           if (requestResult.camera === 'granted') {
             console.log('✅ Camera permission granted via Capacitor');
             return true;
@@ -168,7 +168,7 @@ export default {
               },
             }
           );
-          
+
           await this.qrScanner.start();
           this.cameraWorking = true;
           this.$q.notify({
@@ -254,7 +254,7 @@ export default {
         <q-icon name="content_paste" class="q-mr-sm" />
         {{ $t("QrcodeReader.actions.paste.label") }}</q-btn
       >
-      <q-btn 
+      <q-btn
         v-if="!cameraWorking"
         @click="retryCameraPermission"
         color="primary"

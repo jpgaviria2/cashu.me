@@ -98,6 +98,23 @@ class BluetoothEcashPlugin : Plugin() {
                     ret.put("isFavorite", isFavorite)
                     notifyListeners("favoriteNotificationReceived", ret)
                 }
+
+                override fun onFavoriteRequestReceived(fromPeerID: String, nickname: String, npub: String) {
+                    Log.d(TAG, "Favorite request received: peerID=$fromPeerID, nickname=$nickname, npub=${npub.take(16)}...")
+                    val ret = JSObject()
+                    ret.put("peerID", fromPeerID)
+                    ret.put("nickname", nickname)
+                    ret.put("npub", npub)
+                    notifyListeners("favoriteRequestReceived", ret)
+                }
+
+                override fun onFavoriteAcceptedReceived(fromPeerID: String, npub: String) {
+                    Log.d(TAG, "Favorite accepted received: peerID=$fromPeerID, npub=${npub.take(16)}...")
+                    val ret = JSObject()
+                    ret.put("peerID", fromPeerID)
+                    ret.put("npub", npub)
+                    notifyListeners("favoriteAcceptedReceived", ret)
+                }
             }
         }
     }
@@ -301,7 +318,7 @@ class BluetoothEcashPlugin : Plugin() {
 
     /**
      * Send plain text message to a specific peer (for favorite notifications, etc)
-     * 
+     *
      * @param peerID Peer ID to send to
      * @param message Text message content
      */

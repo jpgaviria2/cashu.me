@@ -73,6 +73,24 @@
           >
             <q-icon name="contacts" size="1.2rem" class="q-mr-sm" />
             <span>Contacts</span>
+            <q-badge v-if="favoritesStore.pendingCount > 0" color="red" floating>
+              {{ favoritesStore.pendingCount }}
+            </q-badge>
+          </q-btn>
+
+          <q-btn
+            v-if="favoritesStore.pendingCount > 0"
+            rounded
+            outline
+            color="orange"
+            class="q-px-lg"
+            @click="showRequestsDialog = true"
+          >
+            <q-icon name="inbox" size="1.2rem" class="q-mr-sm" />
+            <span>Requests</span>
+            <q-badge color="red" floating>
+              {{ favoritesStore.pendingCount }}
+            </q-badge>
           </q-btn>
         </div>
 
@@ -81,7 +99,9 @@
           <q-card style="width: 100%; max-width: 600px;">
             <NearbyContactsDialog @close="showNearbyDialog = false" />
             <q-card-actions align="right">
-              <q-btn flat label="Close" color="primary" v-close-popup />
+              <q-btn flat round icon="close" color="grey" v-close-popup>
+                <q-tooltip>Close</q-tooltip>
+              </q-btn>
             </q-card-actions>
           </q-card>
         </q-dialog>
@@ -91,7 +111,21 @@
           <q-card style="width: 100%; max-width: 600px;">
             <NostrContactsDialog />
             <q-card-actions align="right">
-              <q-btn flat label="Close" color="primary" v-close-popup />
+              <q-btn flat round icon="close" color="grey" v-close-popup>
+                <q-tooltip>Close</q-tooltip>
+              </q-btn>
+            </q-card-actions>
+          </q-card>
+        </q-dialog>
+
+        <!-- Favorite Requests Dialog -->
+        <q-dialog v-model="showRequestsDialog" position="bottom">
+          <q-card style="width: 100%; max-width: 600px;">
+            <FavoriteRequestsDialog />
+            <q-card-actions align="right">
+              <q-btn flat round icon="close" color="grey" v-close-popup>
+                <q-tooltip>Close</q-tooltip>
+              </q-btn>
             </q-card-actions>
           </q-card>
         </q-dialog>
@@ -337,6 +371,7 @@ import QrcodeReader from "components/QrcodeReader.vue";
 import EcashClaimNotification from "components/EcashClaimNotification.vue";
 import NearbyContactsDialog from "components/NearbyContactsDialog.vue";
 import NostrContactsDialog from "components/NostrContactsDialog.vue";
+import FavoriteRequestsDialog from "components/FavoriteRequestsDialog.vue";
 import iOSPWAPrompt from "components/iOSPWAPrompt.vue";
 import AndroidPWAPrompt from "components/AndroidPWAPrompt.vue";
 import ActivityOrb from "components/ActivityOrb.vue";
@@ -352,6 +387,7 @@ import { useWalletStore } from "src/stores/wallet";
 import { useUiStore } from "src/stores/ui";
 import { useProofsStore } from "src/stores/proofs";
 import { useCameraStore } from "src/stores/camera";
+import { useFavoritesStore } from "src/stores/favorites";
 import { useBluetoothStore } from "src/stores/bluetooth";
 import { useP2PKStore } from "src/stores/p2pk";
 import { useNWCStore } from "src/stores/nwc";
@@ -398,6 +434,7 @@ export default {
     EcashClaimNotification,
     NearbyContactsDialog,
     NostrContactsDialog,
+    FavoriteRequestsDialog,
   },
   data: function () {
     return {
@@ -407,6 +444,7 @@ export default {
       deferredPWAInstallPrompt: null,
       showNearbyDialog: false,
       showContactsDialog: false,
+      showRequestsDialog: false,
       action: "main",
       parse: {
         show: false,
@@ -438,6 +476,9 @@ export default {
   },
   computed: {
     ...mapState(useUiStore, ["tickerShort"]),
+    favoritesStore() {
+      return useFavoritesStore();
+    },
     isNativeApp: function () {
       // @ts-ignore
       // Electron should be treated as desktop, not native

@@ -73,7 +73,7 @@ export interface BluetoothEcashPlugin {
   /**
    * Set the Bluetooth nickname (how you appear to nearby peers)
    * Requires service restart to take effect
-   * 
+   *
    * @param options Object containing nickname string (3-32 characters)
    */
   setNickname(options: { nickname: string }): Promise<{ nickname: string }>;
@@ -131,7 +131,7 @@ export interface BluetoothEcashPlugin {
    * Add event listeners for Bluetooth events
    */
   addListener(
-    eventName: 'ecashReceived' | 'peerDiscovered' | 'peerLost' | 'tokenSent' | 'tokenSendFailed' | 'tokenDelivered' | 'favoriteNotificationReceived',
+    eventName: 'ecashReceived' | 'peerDiscovered' | 'peerLost' | 'tokenSent' | 'tokenSendFailed' | 'tokenDelivered' | 'favoriteNotificationReceived' | 'favoriteRequestReceived' | 'favoriteAcceptedReceived',
     listenerFunc: (event: any) => void
   ): Promise<{ remove: () => void }>;
 }

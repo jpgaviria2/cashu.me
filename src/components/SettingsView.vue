@@ -92,9 +92,10 @@
     </div>
 
     <div class="q-py-sm q-px-xs text-left">
-      <BluetoothSettings 
+      <BluetoothSettings
         @openNearbyDialog="showNearbyDialog = true"
         @openContactsDialog="showContactsDialog = true"
+        @openRequestsDialog="showRequestsDialog = true"
       />
     </div>
 
@@ -103,7 +104,9 @@
       <q-card style="width: 100%; max-width: 600px;">
         <NearbyContactsDialog @close="showNearbyDialog = false" />
         <q-card-actions align="right">
-          <q-btn flat label="Close" color="primary" v-close-popup />
+          <q-btn flat round icon="close" color="grey" v-close-popup>
+            <q-tooltip>Close</q-tooltip>
+          </q-btn>
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -113,7 +116,21 @@
       <q-card style="width: 100%; max-width: 600px;">
         <NostrContactsDialog />
         <q-card-actions align="right">
-          <q-btn flat label="Close" color="primary" v-close-popup />
+          <q-btn flat round icon="close" color="grey" v-close-popup>
+            <q-tooltip>Close</q-tooltip>
+          </q-btn>
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+    <!-- Favorite Requests Dialog -->
+    <q-dialog v-model="showRequestsDialog" position="bottom">
+      <q-card style="width: 100%; max-width: 600px;">
+        <FavoriteRequestsDialog />
+        <q-card-actions align="right">
+          <q-btn flat round icon="close" color="grey" v-close-popup>
+            <q-tooltip>Close</q-tooltip>
+          </q-btn>
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -1974,6 +1991,7 @@ import ChooseMint from "./ChooseMint.vue";
 import BluetoothSettings from "./BluetoothSettings.vue";
 import NearbyContactsDialog from "./NearbyContactsDialog.vue";
 import NostrContactsDialog from "./NostrContactsDialog.vue";
+import FavoriteRequestsDialog from "./FavoriteRequestsDialog.vue";
 import VueQrcode from "@chenfengyuan/vue-qrcode";
 
 import { getShortUrl } from "src/js/wallet-helpers";
@@ -2010,6 +2028,7 @@ export default defineComponent({
     BluetoothSettings,
     NearbyContactsDialog,
     NostrContactsDialog,
+    FavoriteRequestsDialog,
     VueQrcode,
   },
   props: {},
@@ -2017,6 +2036,7 @@ export default defineComponent({
     return {
       showNearbyDialog: false,
       showContactsDialog: false,
+      showRequestsDialog: false,
       themes: [
         "monochrome",
         "classic",

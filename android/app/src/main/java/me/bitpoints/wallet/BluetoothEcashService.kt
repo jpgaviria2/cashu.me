@@ -59,8 +59,10 @@ class BluetoothEcashService(private val context: Context) {
                 Log.d(TAG, "Received TEXT message: ${content.take(50)}...")
 
                 // Handle favorite notifications (matches bitchat implementation)
-                if (content.startsWith("[FAVORITED]:") || content.startsWith("[UNFAVORITED]:")) {
-                    handleFavoriteNotification(content, message.senderPeerID ?: "unknown")
+                if (content.startsWith("[FAVORITE_REQUEST]:") ||
+                    content.startsWith("[FAVORITE_ACCEPTED]:") ||
+                    content.startsWith("[UNFAVORITED]:")) {
+                    handleFavoriteNotification(content, message.senderPeerID ?: "unknown", message.sender)
                     return  // Don't process as regular message
                 }
 
@@ -183,7 +185,7 @@ class BluetoothEcashService(private val context: Context) {
     /**
      * Set the Bluetooth nickname (how you appear to nearby peers)
      * Requires service restart to take effect
-     * 
+     *
      * @param nickname Display name for Bluetooth mesh (3-32 characters)
      */
     fun setNickname(nickname: String) {
@@ -191,11 +193,11 @@ class BluetoothEcashService(private val context: Context) {
             Log.w(TAG, "Nickname must be 3-32 characters, ignoring")
             return
         }
-        
+
         val oldNickname = myNickname
         myNickname = nickname
         Log.i(TAG, "Bluetooth nickname updated: '$oldNickname' -> '$myNickname'")
-        
+
         // Note: Service must be restarted for nickname change to take effect in announcements
     }
 
@@ -410,9 +412,8 @@ class BluetoothEcashService(private val context: Context) {
      * Handle favorite/unfavorite notifications (matches bitchat implementation)
      * Format: "[FAVORITED]:npub1..." or "[UNFAVORITED]:npub1..."
      */
-    private fun handleFavoriteNotification(content: String, fromPeerID: String) {
+    private fun handleFavoriteNotification(content: String, fromPeerID: String, nickname: String?) {
         try {
-            val isFavorite = content.startsWith("[FAVORITED]")
             val npub = content.substringAfter(":", "").trim()
 
             // Validate npub format
@@ -421,10 +422,20 @@ class BluetoothEcashService(private val context: Context) {
                 return
             }
 
-            Log.i(TAG, "⭐️ Received ${if (isFavorite) "FAVORITE" else "UNFAVORITE"} notification from $fromPeerID with npub: ${npub.take(16)}...")
-
-            // Notify frontend via delegate
-            delegate?.onFavoriteNotificationReceived(fromPeerID, npub, isFavorite)
+            when {
+                content.startsWith("[FAVORITE_REQUEST]:") -> {
+                    Log.i(TAG, "📬 Received FAVORITE_REQUEST from $fromPeerID (${nickname ?: "Unknown"}) with npub: ${npub.take(16)}...")
+                    delegate?.onFavoriteRequestReceived(fromPeerID, nickname ?: "Unknown", npub)
+                }
+                content.startsWith("[FAVORITE_ACCEPTED]:") -> {
+                    Log.i(TAG, "✅ Received FAVORITE_ACCEPTED from $fromPeerID with npub: ${npub.take(16)}...")
+                    delegate?.onFavoriteAcceptedReceived(fromPeerID, npub)
+                }
+                content.startsWith("[UNFAVORITED]:") -> {
+                    Log.i(TAG, "💔 Received UNFAVORITE notification from $fromPeerID with npub: ${npub.take(16)}...")
+                    delegate?.onFavoriteNotificationReceived(fromPeerID, npub, false)
+                }
+            }
 
         } catch (e: Exception) {
             Log.e(TAG, "Failed to handle favorite notification", e)
@@ -470,5 +481,15 @@ interface EcashDelegate {
      * Called when a favorite/unfavorite notification is received
      */
     fun onFavoriteNotificationReceived(fromPeerID: String, npub: String, isFavorite: Boolean)
+
+    /**
+     * Called when a favorite request is received
+     */
+    fun onFavoriteRequestReceived(fromPeerID: String, nickname: String, npub: String)
+
+    /**
+     * Called when a favorite acceptance is received
+     */
+    fun onFavoriteAcceptedReceived(fromPeerID: String, npub: String)
 }
 

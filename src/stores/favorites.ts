@@ -17,9 +17,17 @@ export interface FavoriteRelationship {
   lastUpdated: Date;
 }
 
+export interface FavoritePendingRequest {
+  peerNoisePublicKey: string;
+  peerNickname: string;
+  peerNostrNpub: string;
+  receivedAt: Date;
+}
+
 export const useFavoritesStore = defineStore('favorites', {
   state: () => ({
     favorites: useLocalStorage<Record<string, FavoriteRelationship>>('bitpoints-favorites', {}),
+    pendingRequests: useLocalStorage<Record<string, FavoritePendingRequest>>('bitpoints-pending-favorites', {}),
   }),
 
   getters: {
@@ -53,6 +61,20 @@ export const useFavoritesStore = defineStore('favorites', {
      */
     mutualCount(): number {
       return this.mutualFavorites.length;
+    },
+
+    /**
+     * Get all pending favorite requests
+     */
+    pendingRequestsList: (state) => {
+      return Object.values(state.pendingRequests);
+    },
+
+    /**
+     * Count of pending requests
+     */
+    pendingCount(): number {
+      return this.pendingRequestsList.length;
     },
   },
 
@@ -190,6 +212,62 @@ export const useFavoritesStore = defineStore('favorites', {
     clearAll() {
       console.log('🧹 Clearing all favorites');
       this.favorites = {};
+    },
+
+    /**
+     * Add a pending favorite request
+     */
+    addPendingRequest(
+      peerNoisePublicKey: string,
+      peerNickname: string,
+      peerNostrNpub: string
+    ) {
+      console.log(`📬 Adding pending request from: ${peerNickname} (${peerNoisePublicKey.substring(0, 16)}...)`);
+
+      const request: FavoritePendingRequest = {
+        peerNoisePublicKey,
+        peerNickname,
+        peerNostrNpub,
+        receivedAt: new Date(),
+      };
+
+      this.pendingRequests[peerNoisePublicKey] = request;
+    },
+
+    /**
+     * Remove a pending request
+     */
+    removePendingRequest(peerNoisePublicKey: string) {
+      console.log(`🗑️ Removing pending request from: ${peerNoisePublicKey.substring(0, 16)}...`);
+      delete this.pendingRequests[peerNoisePublicKey];
+    },
+
+    /**
+     * Accept a pending request and add to favorites
+     */
+    acceptPendingRequest(peerNoisePublicKey: string): FavoritePendingRequest | null {
+      const request = this.pendingRequests[peerNoisePublicKey];
+      if (!request) {
+        console.warn(`⚠️ No pending request found for ${peerNoisePublicKey}`);
+        return null;
+      }
+
+      console.log(`✅ Accepting favorite request from: ${request.peerNickname}`);
+
+      // Add to favorites
+      this.addFavorite(
+        request.peerNoisePublicKey,
+        request.peerNickname,
+        request.peerNostrNpub
+      );
+
+      // Mark that they favorited us
+      this.updatePeerFavoritedUs(request.peerNoisePublicKey, true);
+
+      // Remove from pending
+      this.removePendingRequest(peerNoisePublicKey);
+
+      return request;
     },
   },
 });

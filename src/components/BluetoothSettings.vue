@@ -50,7 +50,7 @@
 
     <q-card-section>
       <div class="text-subtitle2 q-mb-sm">Connection Status</div>
-      
+
       <!-- Desktop help text -->
       <q-banner v-if="isDesktop && !bluetoothStore.isActive" dense class="bg-info text-white q-mb-sm" rounded>
         <template v-slot:avatar>
@@ -58,12 +58,12 @@
         </template>
         Click "Connect Device" to enable Bluetooth. Your browser will show available devices.
       </q-banner>
-      
+
       <q-list dense>
         <q-item>
           <q-item-section avatar>
-            <q-icon 
-              :name="bluetoothStore.isActive ? 'bluetooth_connected' : 'bluetooth_disabled'" 
+            <q-icon
+              :name="bluetoothStore.isActive ? 'bluetooth_connected' : 'bluetooth_disabled'"
               :color="bluetoothStore.isActive ? 'positive' : 'grey'"
             />
           </q-item-section>
@@ -146,12 +146,12 @@
       <div class="text-caption text-grey-6 q-mb-sm">
         For kids' devices without consistent internet - keeps Bluetooth mesh active 24/7
       </div>
-      
+
       <q-list dense>
         <q-item>
           <q-item-section avatar>
-            <q-icon 
-              :name="bluetoothStore.alwaysOnActive ? 'battery_charging_full' : 'battery_std'" 
+            <q-icon
+              :name="bluetoothStore.alwaysOnActive ? 'battery_charging_full' : 'battery_std'"
               :color="bluetoothStore.alwaysOnActive ? 'positive' : 'grey'"
             />
           </q-item-section>
@@ -186,10 +186,10 @@
       </div>
 
       <!-- Warning banner -->
-      <q-banner 
-        v-if="bluetoothStore.alwaysOnEnabled" 
-        dense 
-        class="bg-warning text-dark q-mt-sm" 
+      <q-banner
+        v-if="bluetoothStore.alwaysOnEnabled"
+        dense
+        class="bg-warning text-dark q-mt-sm"
         rounded
       >
         <template v-slot:avatar>
@@ -220,7 +220,24 @@
           icon="favorite"
           label="Favorites"
           @click="showFavorites"
-        />
+        >
+          <q-badge v-if="favoritesStore.pendingCount > 0" color="red" floating>
+            {{ favoritesStore.pendingCount }}
+          </q-badge>
+        </q-btn>
+        <q-btn
+          v-if="favoritesStore.pendingCount > 0"
+          rounded
+          outline
+          color="orange"
+          icon="inbox"
+          label="Requests"
+          @click="showRequests"
+        >
+          <q-badge color="red" floating>
+            {{ favoritesStore.pendingCount }}
+          </q-badge>
+        </q-btn>
       </div>
     </q-card-section>
 
@@ -253,6 +270,7 @@ import { notifySuccess } from 'src/js/notify';
 const emit = defineEmits<{
   (e: 'openNearbyDialog'): void;
   (e: 'openContactsDialog'): void;
+  (e: 'openRequestsDialog'): void;
 }>();
 
 const bluetoothStore = useBluetoothStore();
@@ -317,6 +335,10 @@ function showFavorites() {
   emit('openContactsDialog');
 }
 
+function showRequests() {
+  emit('openRequestsDialog');
+}
+
 async function toggleAlwaysOnMode(enabled: boolean) {
   try {
     await bluetoothStore.toggleAlwaysOnMode(enabled);
@@ -341,7 +363,7 @@ function showBatteryInfo() {
 
 onMounted(async () => {
   localNickname.value = bluetoothStore.nickname;
-  
+
   // Check always-on status on mount
   if (!isDesktop.value) {
     await bluetoothStore.checkAlwaysOnStatus();

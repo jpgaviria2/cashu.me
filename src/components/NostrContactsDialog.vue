@@ -31,9 +31,9 @@
           <q-item-section>
             <q-item-label>
               {{ contact.peerNickname }}
-              <q-icon 
+              <q-icon
                 v-if="contact.theyFavoritedUs"
-                name="favorite" 
+                name="favorite"
                 color="pink"
                 size="xs"
                 class="q-ml-xs"
@@ -52,19 +52,32 @@
           </q-item-section>
 
           <q-item-section side>
-            <q-btn
-              flat
-              dense
-              round
-              icon="send"
-              :color="contact.peerNostrNpub ? 'primary' : 'grey'"
-              :disable="!contact.peerNostrNpub"
-              @click.stop="openSendDialog(contact)"
-            >
-              <q-tooltip>
-                {{ contact.peerNostrNpub ? 'Send ecash via Nostr' : 'Nostr key required for remote send' }}
-              </q-tooltip>
-            </q-btn>
+            <div class="row items-center q-gutter-xs">
+              <q-btn
+                flat
+                dense
+                round
+                size="sm"
+                icon="delete"
+                color="grey"
+                @click.stop="removeFavorite(contact)"
+              >
+                <q-tooltip>Remove from favorites</q-tooltip>
+              </q-btn>
+              <q-btn
+                flat
+                dense
+                round
+                icon="send"
+                :color="contact.peerNostrNpub ? 'primary' : 'grey'"
+                :disable="!contact.peerNostrNpub"
+                @click.stop="openSendDialog(contact)"
+              >
+                <q-tooltip>
+                  {{ contact.peerNostrNpub ? 'Send ecash via Nostr' : 'Nostr key required for remote send' }}
+                </q-tooltip>
+              </q-btn>
+            </div>
           </q-item-section>
         </q-item>
       </q-list>
@@ -118,7 +131,9 @@
           </q-card-section>
 
           <q-card-actions align="right" class="q-pa-md">
-            <q-btn flat label="Cancel" color="grey" @click="closeSendDialog" />
+            <q-btn flat round icon="close" color="grey" @click="closeSendDialog">
+              <q-tooltip>Close</q-tooltip>
+            </q-btn>
             <q-btn
               color="primary"
               label="Send"
@@ -186,6 +201,11 @@ export default defineComponent({
       sendTarget.value = null;
       sendAmount.value = null;
       sendMemo.value = '';
+    };
+
+    const removeFavorite = (contact: FavoriteRelationship) => {
+      favoritesStore.removeFavorite(contact.peerNoisePublicKey);
+      notifySuccess(`Removed ${contact.peerNickname} from favorites`);
     };
 
     const sendViaNostr = async () => {
@@ -269,6 +289,7 @@ export default defineComponent({
       formatNpub,
       openSendDialog,
       closeSendDialog,
+      removeFavorite,
       sendViaNostr,
     };
   },

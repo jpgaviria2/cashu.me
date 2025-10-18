@@ -19,7 +19,7 @@ import me.bitpoints.wallet.R
 
 /**
  * Always-On Foreground Service for Kids' Devices
- * 
+ *
  * Keeps Bitpoints Bluetooth mesh active 24/7 for devices without consistent internet.
  * Shows persistent notification and prevents Android from killing the app.
  */
@@ -30,11 +30,11 @@ class AlwaysOnService : Service(), BluetoothMeshDelegate {
         private const val NOTIFICATION_ID = 1001
         private const val CHANNEL_ID = "bitpoints_always_on"
         private const val CHANNEL_NAME = "Bitpoints Always-On Mode"
-        
+
         // Actions for service control
         const val ACTION_START_SERVICE = "me.bitpoints.wallet.START_ALWAYS_ON"
         const val ACTION_STOP_SERVICE = "me.bitpoints.wallet.STOP_ALWAYS_ON"
-        
+
         // Service state
         var isServiceRunning = false
             private set
@@ -56,7 +56,7 @@ class AlwaysOnService : Service(), BluetoothMeshDelegate {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d(TAG, "AlwaysOnService onStartCommand: ${intent?.action}")
-        
+
         when (intent?.action) {
             ACTION_START_SERVICE -> {
                 startForegroundService()
@@ -67,7 +67,7 @@ class AlwaysOnService : Service(), BluetoothMeshDelegate {
                 return START_NOT_STICKY
             }
         }
-        
+
         return START_STICKY
     }
 
@@ -90,17 +90,17 @@ class AlwaysOnService : Service(), BluetoothMeshDelegate {
 
         Log.d(TAG, "Starting foreground service")
         isServiceRunning = true
-        
+
         // Create and show notification
         val notification = createNotification()
-        
+
         // Start foreground service
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE)
         } else {
             startForeground(NOTIFICATION_ID, notification)
         }
-        
+
         // Start Bluetooth mesh
         startBluetoothMesh()
     }
@@ -132,7 +132,7 @@ class AlwaysOnService : Service(), BluetoothMeshDelegate {
                 enableVibration(false)
                 setSound(null, null)
             }
-            
+
             val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
         }
@@ -145,7 +145,7 @@ class AlwaysOnService : Service(), BluetoothMeshDelegate {
         val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
-        
+
         val pendingIntent = PendingIntent.getActivity(
             this, 0, intent,
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -180,7 +180,7 @@ class AlwaysOnService : Service(), BluetoothMeshDelegate {
      */
     private fun updateNotification() {
         if (!isServiceRunning) return
-        
+
         val notification = createNotification()
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.notify(NOTIFICATION_ID, notification)
@@ -249,14 +249,14 @@ class AlwaysOnService : Service(), BluetoothMeshDelegate {
      */
     private fun cleanup() {
         stopBluetoothMesh()
-        
+
         wakeLock?.let { wl ->
             if (wl.isHeld) {
                 wl.release()
                 Log.d(TAG, "Wake lock released")
             }
         }
-        
+
         isServiceRunning = false
     }
 

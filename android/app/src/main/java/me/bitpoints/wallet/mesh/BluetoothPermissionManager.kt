@@ -9,13 +9,13 @@ import androidx.core.app.ActivityCompat
  * Handles all Bluetooth permission checking logic
  */
 class BluetoothPermissionManager(private val context: Context) {
-    
+
     /**
      * Check if all required Bluetooth permissions are granted
      */
     fun hasBluetoothPermissions(): Boolean {
         val permissions = mutableListOf<String>()
-        
+
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
             // Android 12+ (SDK 31+): Use new Bluetooth permissions
             // Location not required when using BLUETOOTH_SCAN with neverForLocation flag
@@ -34,9 +34,9 @@ class BluetoothPermissionManager(private val context: Context) {
                 Manifest.permission.ACCESS_FINE_LOCATION
             ))
         }
-        
-        return permissions.all { 
-            ActivityCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED 
+
+        return permissions.all {
+            ActivityCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
         }
     }
-} 
+}

@@ -377,7 +377,7 @@ export default defineComponent({
           if (!nostrStore.seedSignerPublicKey) {
             await nostrStore.walletSeedGenerateKeyPair();
           }
-          
+
           const hexPubkey = nostrStore.seedSignerPublicKey || nostrStore.pubkey;
           if (hexPubkey) {
             // Convert hex pubkey to npub format using bech32
@@ -398,25 +398,25 @@ export default defineComponent({
           peer.nostrNpub || null
         );
 
-        // Send favorite notification with our Nostr npub via Bluetooth
+        // Send favorite request with our Nostr npub via Bluetooth
         try {
           // Generate npub from wallet seed if not already set
           if (!nostrStore.seedSignerPublicKey) {
             await nostrStore.walletSeedGenerateKeyPair();
           }
-          
+
           const hexPubkey = nostrStore.seedSignerPublicKey || nostrStore.pubkey;
           if (hexPubkey) {
             // Convert hex pubkey to npub format using bech32
             const npub = hexPubkey.startsWith('npub') ? hexPubkey : nip19.npubEncode(hexPubkey);
-            await bluetoothStore.sendTextMessage(peer.peerID, `[FAVORITED]:${npub}`);
-            console.log(`📤 Sent favorite notification to ${peer.nickname} with npub: ${npub.substring(0, 16)}...`);
+            await bluetoothStore.sendTextMessage(peer.peerID, `[FAVORITE_REQUEST]:${npub}`);
+            console.log(`📤 Sent favorite request to ${peer.nickname} with npub: ${npub.substring(0, 16)}...`);
           }
         } catch (error) {
-          console.error('Failed to send favorite notification:', error);
+          console.error('Failed to send favorite request:', error);
         }
 
-        notifySuccess(`Added ${peer.nickname} to favorites`);
+        notifySuccess(`Sent favorite request to ${peer.nickname}`);
       }
     };
 

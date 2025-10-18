@@ -123,3 +123,6 @@ Even with working Bluetooth, the transaction history provides:
 
 This is actually a **better UX** than Bluetooth-only!
 
+
+
+

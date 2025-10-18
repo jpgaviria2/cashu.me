@@ -246,3 +246,6 @@ Once basic functionality is verified:
 6. Battery optimization dialogs
 7. Release v1.1.0-beta with Bluetooth support!
 
+
+
+

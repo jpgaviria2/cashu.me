@@ -157,3 +157,6 @@ For testing Bluetooth WITHOUT needing real money:
 
 Once you have tokens, the Bluetooth mesh networking is ready to test! 🚀
 
+
+
+

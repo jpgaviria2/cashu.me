@@ -176,6 +176,16 @@ export const useBluetoothStore = defineStore('bluetooth', {
           this.handleFavoriteNotification(event.peerID, event.npub, event.isFavorite);
         });
 
+        await BluetoothEcash.addListener('favoriteRequestReceived', (event: { peerID: string; nickname: string; npub: string }) => {
+          console.log('📬 Favorite request received:', event);
+          this.handleFavoriteRequest(event.peerID, event.nickname, event.npub);
+        });
+
+        await BluetoothEcash.addListener('favoriteAcceptedReceived', (event: { peerID: string; npub: string }) => {
+          console.log('✅ Favorite accepted received:', event);
+          this.handleFavoriteAccepted(event.peerID, event.npub);
+        });
+
         this.isInitialized = true;
         console.log('Bluetooth ecash service initialized');
       } catch (e) {
@@ -495,22 +505,22 @@ export const useBluetoothStore = defineStore('bluetooth', {
      */
     handleFavoriteNotification(peerID: string, npub: string, isFavorite: boolean) {
       console.log(`⭐️ ${isFavorite ? 'FAVORITED' : 'UNFAVORITED'} by ${peerID} with npub: ${npub.substring(0, 16)}...`);
-      
+
       // Update favorites store with the peer's Nostr npub
       const favoritesStore = useFavoritesStore();
       favoritesStore.updateNostrNpub(peerID, npub);
-      
+
       // If they favorited us, update the theyFavoritedUs flag
       if (isFavorite) {
         favoritesStore.updatePeerFavoritedUs(peerID, true);
       } else {
         favoritesStore.updatePeerFavoritedUs(peerID, false);
       }
-      
+
       // Show notification to user
       const peer = this.nearbyPeers.find(p => p.peerID === peerID);
       const nickname = peer?.nickname || peerID.substring(0, 8);
-      
+
       if (isFavorite) {
         const isMutual = favoritesStore.isMutualFavorite(peerID);
         if (isMutual) {
@@ -519,6 +529,43 @@ export const useBluetoothStore = defineStore('bluetooth', {
           notifySuccess(`⭐️ ${nickname} added you as favorite. Favorite back for Nostr messaging!`);
         }
       }
+    },
+
+    handleFavoriteRequest(peerID: string, nickname: string, npub: string) {
+      console.log(`📬 Favorite request from ${nickname} (${peerID}) with npub: ${npub.substring(0, 16)}...`);
+
+      // Add to pending requests
+      const favoritesStore = useFavoritesStore();
+      favoritesStore.addPendingRequest(peerID, nickname, npub);
+
+      // Show notification with action
+      notifySuccess(`📬 ${nickname} wants to be your favorite!`, {
+        timeout: 5000,
+        actions: [
+          {
+            label: 'View',
+            color: 'white',
+            handler: () => {
+              // This will be handled by opening the pending requests dialog
+              // The UI will detect pending requests and show a badge
+            }
+          }
+        ]
+      });
+    },
+
+    handleFavoriteAccepted(peerID: string, npub: string) {
+      console.log(`✅ Favorite accepted by ${peerID} with npub: ${npub.substring(0, 16)}...`);
+
+      // Update favorites store with the peer's Nostr npub
+      const favoritesStore = useFavoritesStore();
+      favoritesStore.updateNostrNpub(peerID, npub);
+      favoritesStore.updatePeerFavoritedUs(peerID, true);
+
+      // Show success notification
+      const peer = this.nearbyPeers.find(p => p.peerID === peerID);
+      const nickname = peer?.nickname || peerID.substring(0, 8);
+      notifySuccess(`💕 ${nickname} accepted your favorite request! You can now message via Nostr.`);
     },
 
     /**

@@ -17,3 +17,6 @@ adb logcat \
   -s "Capacitor/Console:*" \
   | grep --line-buffered -E "send|Send|token|Token|ecash|Ecash|peer|Peer|error|Error|fail|Fail|broadcast|Broadcast|received|Received|claimed|Claimed"
 
+
+
+

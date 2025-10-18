@@ -75,10 +75,10 @@ bluetooth.onMessage((message: string) => {
   if (message.startsWith("cashuA") || message.startsWith("cashuB")) {
     // Parse token
     const token = parseFirstLine(message);
-    
+
     // Optional: Parse metadata
     const metadata = parseMetadata(message);
-    
+
     // Store for claiming
     await storePendingToken({
       token,
@@ -86,10 +86,10 @@ bluetooth.onMessage((message: string) => {
       memo: metadata?.memo,
       from: metadata?.from
     });
-    
+
     // Notify user
     showNotification(`Received ${metadata?.amount || '?'} sats via Bluetooth!`);
-    
+
     // Auto-claim if online
     if (navigator.onLine) {
       await claimToken(token);
@@ -106,13 +106,13 @@ async function claimToken(token: string) {
     const proofs = deserializeToken(token);
     const mint = await getMintFromProofs(proofs);
     const wallet = new CashuWallet(mint);
-    
+
     // Swap proofs to claim
     const newProofs = await wallet.receiveTokenEntry(proofs);
-    
+
     // Add to balance
     await addProofsToWallet(newProofs);
-    
+
     return { success: true, amount: sumProofs(newProofs) };
   } catch (e) {
     return { success: false, error: e.message };
@@ -203,18 +203,20 @@ val packet = BitchatPacket(
 
 By using **plain TEXT messaging** with **standard Cashu token format**, this implementation achieves:
 
-✅ **Universal Compatibility**: Works with any text-capable Bluetooth app  
-✅ **Simple Integration**: Minimal code required for other wallets  
-✅ **Secure**: Leverages Cashu's cryptographic guarantees  
-✅ **Reliable**: Proven interoperability with bitchat  
-✅ **Extensible**: Easy to add features without breaking compatibility  
+✅ **Universal Compatibility**: Works with any text-capable Bluetooth app
+✅ **Simple Integration**: Minimal code required for other wallets
+✅ **Secure**: Leverages Cashu's cryptographic guarantees
+✅ **Reliable**: Proven interoperability with bitchat
+✅ **Extensible**: Easy to add features without breaking compatibility
 
 **This is the most interoperable Bluetooth Cashu implementation possible** - because it uses the simplest, most universal protocol: plain text messages containing standard Cashu tokens.
 
 ---
 
 ## 🏷️ Version: v0.2.1-beta
-**Status**: Production-ready for Trails Coffee deployment  
-**Tested**: ✅ Trails ↔ Trails, ✅ Trails ↔ bitchat  
+**Status**: Production-ready for Trails Coffee deployment
+**Tested**: ✅ Trails ↔ Trails, ✅ Trails ↔ bitchat
 **License**: MIT (same as parent project)
+
+
 
