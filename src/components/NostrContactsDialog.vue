@@ -258,13 +258,13 @@ export default defineComponent({
         // Send via Nostr DM (NIP-04)
         await nostrStore.sendNip04DirectMessage(sendTarget.value.peerNostrNpub, messageContent);
 
-        // Add to transaction history
+        // Add to transaction history so user can recover via QR code
         tokensStore.addPendingToken({
           amount: actualAmount,
-          serializedToken: tokenBase64,
+          token: tokenBase64,
           mint: mintsStore.activeMintUrl,
           unit: unit.value,
-          memo: sendMemo.value || `Sent to ${sendTarget.value.peerNickname} via Nostr`,
+          label: sendMemo.value ? `📡 Nostr: ${sendMemo.value}` : `📡 Sent to ${sendTarget.value.peerNickname} via Nostr`,
         });
 
         notifySuccess(`Sent ${sendAmount.value} ${unit.value} to ${sendTarget.value.peerNickname} via Nostr!`);
