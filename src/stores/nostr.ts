@@ -303,28 +303,28 @@ export const useNostrStore = defineStore("nostr", {
           return;
         }
       }
-      
+
       console.log(`📤 Sending plaintext Cashu token to: ${recipientPubkeyHex.substring(0, 16)}...`);
       console.log(`📤 Message length: ${message.length} chars`);
 
       // Use wallet seed signer for consistency
       await this.walletSeedGenerateKeyPair();
-      
+
       const ndk = new NDK({
         explicitRelayUrls: this.relays,
         signer: new NDKPrivateKeySigner(this.seedSignerPrivateKey),
       });
-      
+
       await ndk.connect();
-      
+
       const event = new NDKEvent(ndk);
       event.kind = 4; // DM kind, but sending plaintext (Cashu tokens are bearer tokens)
       event.content = message; // No encryption - token is already a bearer token
       event.tags = [["p", recipientPubkeyHex]];
-      
+
       console.log(`📤 Signing event with our seedSigner: ${this.seedSignerPublicKey.substring(0, 16)}...`);
       await event.sign();
-      
+
       console.log(`📤 Publishing to relays:`, this.relays);
       try {
         await event.publish();
@@ -340,18 +340,21 @@ export const useNostrStore = defineStore("nostr", {
       await this.initNdkReadOnly();
       let nip04DirectMessageEvents: Set<NDKEvent> = new Set();
       const fetchEventsPromise = new Promise<Set<NDKEvent>>((resolve) => {
-        if (!this.lastEventTimestamp) {
-          this.lastEventTimestamp = Math.floor(Date.now() / 1000);
-        }
+        // Subscribe from 24 hours ago to catch recent messages
+        const oneDayAgo = Math.floor(Date.now() / 1000) - (24 * 60 * 60);
+        const subscribeFrom = this.lastEventTimestamp || oneDayAgo;
+        
         console.log(
-          `### Subscribing to NIP-04 direct messages to ${this.seedSignerPublicKey} since ${this.lastEventTimestamp}`
+          `### Subscribing to NIP-04 direct messages to ${this.seedSignerPublicKey} since ${subscribeFrom}`
         );
+        console.log(`🔔 Will receive messages from the last 24 hours`);
+        
         this.ndk.connect();
         const sub = this.ndk.subscribe(
           {
-            kinds: [NDKKind.EncryptedDirectMessage],
+            kinds: [4], // Kind 4 DMs (we're sending plaintext now)
             "#p": [this.seedSignerPublicKey],
-            since: this.lastEventTimestamp,
+            since: subscribeFrom,
           } as NDKFilter,
           { closeOnEose: false, groupable: false }
         );
@@ -360,7 +363,7 @@ export const useNostrStore = defineStore("nostr", {
           console.log("📨 Sender pubkey:", event.pubkey.substring(0, 16) + "...");
           console.log("📨 Recipient (us):", this.seedSignerPublicKey.substring(0, 16) + "...");
           console.log("📨 Content (plaintext Cashu):", event.content.substring(0, 50) + "...");
-          
+
           // No decryption needed - Cashu tokens are bearer tokens
           // We send them as plaintext for simplicity and compatibility
           nip04DirectMessageEvents.add(event);
@@ -526,9 +529,13 @@ export const useNostrStore = defineStore("nostr", {
       }
     },
     parseMessageForEcash: async function (message: string) {
+      console.log('🔍 parseMessageForEcash called with message length:', message.length);
+      console.log('🔍 Message preview:', message.substring(0, 50) + '...');
+
       // first check if the message can be converted to a json and then to a PaymentRequestPayload
       try {
         const payload = JSON.parse(message) as PaymentRequestPayload;
+        console.log('📦 Parsed as JSON payment request');
         if (payload) {
           const receiveStore = useReceiveTokensStore();
           const prStore = usePRStore();
@@ -567,32 +574,39 @@ export const useNostrStore = defineStore("nostr", {
           return;
         }
       } catch (e) {
-        // console.log("### parsing message for ecash failed");
-        return;
+        console.log("📦 Not a JSON payment request, trying Cashu token parsing...");
       }
 
-      console.log("### parsing message for ecash", message);
+      console.log("🔍 Parsing message for Cashu tokens");
       const receiveStore = useReceiveTokensStore();
       const words = message.split(" ");
       const tokens = words.filter((word) => {
         return word.startsWith("cashuA") || word.startsWith("cashuB");
       });
+      console.log(`🔍 Found ${tokens.length} Cashu token(s) in message`);
+
       for (const tokenStr of tokens) {
+        console.log(`💰 Processing Cashu token: ${tokenStr.substring(0, 30)}...`);
         receiveStore.receiveData.tokensBase64 = tokenStr;
         receiveStore.showReceiveTokens = true;
         await this.addPendingTokenToHistory(tokenStr);
+        console.log('✅ Token added to history and receive dialog shown');
       }
     },
     addPendingTokenToHistory: function (tokenStr: string, verbose = true) {
+      console.log('💾 addPendingTokenToHistory called');
       const receiveStore = useReceiveTokensStore();
       const tokensStore = useTokensStore();
       if (tokensStore.tokenAlreadyInHistory(tokenStr)) {
+        console.log('ℹ️ Token already in history, skipping');
         notifySuccess("Ecash already in history");
         receiveStore.showReceiveTokens = false;
         return;
       }
+      console.log('🔓 Decoding Cashu token...');
       const decodedToken = token.decode(tokenStr);
       if (decodedToken == undefined) {
+        console.error('❌ Failed to decode token');
         throw Error("could not decode token");
       }
       // get amount from decodedToken.token.proofs[..].amount
@@ -600,12 +614,15 @@ export const useNostrStore = defineStore("nostr", {
         .getProofs(decodedToken)
         .reduce((sum, el) => (sum += el.amount), 0);
 
+      console.log(`💰 Adding ${amount} ${token.getUnit(decodedToken)} to pending tokens`);
+
       tokensStore.addPendingToken({
         amount: amount,
         token: tokenStr,
         mint: token.getMint(decodedToken),
         unit: token.getUnit(decodedToken),
       });
+      console.log('✅ Token added to pending history');
       receiveStore.showReceiveTokens = false;
       // show success notification
       if (verbose) {
