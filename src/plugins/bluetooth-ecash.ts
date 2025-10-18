@@ -92,6 +92,14 @@ export interface BluetoothEcashPlugin {
   sendToken(options: SendTokenOptions): Promise<{ messageId: string }>;
 
   /**
+   * Send plain text message to a specific peer
+   * Used for favorite notifications and system messages
+   *
+   * @param options Peer ID and message content
+   */
+  sendTextMessage(options: { peerID: string; message: string }): Promise<void>;
+
+  /**
    * Get list of currently available peers
    *
    * @returns Array of nearby peers
@@ -123,7 +131,7 @@ export interface BluetoothEcashPlugin {
    * Add event listeners for Bluetooth events
    */
   addListener(
-    eventName: 'ecashReceived' | 'peerDiscovered' | 'peerLost' | 'tokenSent' | 'tokenSendFailed' | 'tokenDelivered',
+    eventName: 'ecashReceived' | 'peerDiscovered' | 'peerLost' | 'tokenSent' | 'tokenSendFailed' | 'tokenDelivered' | 'favoriteNotificationReceived',
     listenerFunc: (event: any) => void
   ): Promise<{ remove: () => void }>;
 }
@@ -135,7 +143,12 @@ const BluetoothEcash = registerPlugin<BluetoothEcashPlugin>('BluetoothEcash', {
       console.warn('Bluetooth mesh not available in web browser');
     },
     stopService: async () => {},
+    setNickname: async () => ({ nickname: '' }),
+    getNickname: async () => ({ nickname: '' }),
+    isBluetoothEnabled: async () => ({ enabled: false }),
+    requestBluetoothEnable: async () => ({ requested: false }),
     sendToken: async () => ({ messageId: '' }),
+    sendTextMessage: async () => {},
     getAvailablePeers: async () => ({ peers: [] }),
     getUnclaimedTokens: async () => ({ tokens: [] }),
     markTokenClaimed: async () => {},

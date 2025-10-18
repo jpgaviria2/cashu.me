@@ -54,9 +54,15 @@ class BluetoothEcashService(private val context: Context) {
     private fun setupMeshDelegate() {
         meshService.delegate = object : me.bitpoints.wallet.mesh.BluetoothMeshDelegate {
             override fun didReceiveMessage(message: me.bitpoints.wallet.model.BitchatMessage) {
-                // Check if message content contains a Cashu token
+                // Check if message content contains a Cashu token or favorite notification
                 val content = message.content.trim()
                 Log.d(TAG, "Received TEXT message: ${content.take(50)}...")
+
+                // Handle favorite notifications (matches bitchat implementation)
+                if (content.startsWith("[FAVORITED]:") || content.startsWith("[UNFAVORITED]:")) {
+                    handleFavoriteNotification(content, message.senderPeerID ?: "unknown")
+                    return  // Don't process as regular message
+                }
 
                 // Detect Cashu token (starts with "cashuA" or "cashuB")
                 if (content.startsWith("cashuA") || content.startsWith("cashuB")) {
@@ -391,6 +397,39 @@ class BluetoothEcashService(private val context: Context) {
         }
         return out
     }
+
+    /**
+     * Send plain text message to a specific peer (for favorite notifications)
+     */
+    fun sendTextMessageToPeer(peerID: String, message: String) {
+        Log.d(TAG, "Sending text message to $peerID: ${message.take(30)}...")
+        meshService.sendMessageToPeer(peerID, message)
+    }
+
+    /**
+     * Handle favorite/unfavorite notifications (matches bitchat implementation)
+     * Format: "[FAVORITED]:npub1..." or "[UNFAVORITED]:npub1..."
+     */
+    private fun handleFavoriteNotification(content: String, fromPeerID: String) {
+        try {
+            val isFavorite = content.startsWith("[FAVORITED]")
+            val npub = content.substringAfter(":", "").trim()
+
+            // Validate npub format
+            if (!npub.startsWith("npub1")) {
+                Log.w(TAG, "Invalid npub format in favorite notification")
+                return
+            }
+
+            Log.i(TAG, "⭐️ Received ${if (isFavorite) "FAVORITE" else "UNFAVORITE"} notification from $fromPeerID with npub: ${npub.take(16)}...")
+
+            // Notify frontend via delegate
+            delegate?.onFavoriteNotificationReceived(fromPeerID, npub, isFavorite)
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to handle favorite notification", e)
+        }
+    }
 }
 
 /**
@@ -426,5 +465,10 @@ interface EcashDelegate {
      * Called when a token is delivered to a peer
      */
     fun onTokenDelivered(messageId: String, peerID: String)
+
+    /**
+     * Called when a favorite/unfavorite notification is received
+     */
+    fun onFavoriteNotificationReceived(fromPeerID: String, npub: String, isFavorite: Boolean)
 }
 

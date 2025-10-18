@@ -89,6 +89,15 @@ class BluetoothEcashPlugin : Plugin() {
                     ret.put("peerID", peerID)
                     notifyListeners("tokenDelivered", ret)
                 }
+
+                override fun onFavoriteNotificationReceived(fromPeerID: String, npub: String, isFavorite: Boolean) {
+                    Log.d(TAG, "Favorite notification received: peerID=$fromPeerID, npub=${npub.take(16)}..., isFavorite=$isFavorite")
+                    val ret = JSObject()
+                    ret.put("peerID", fromPeerID)
+                    ret.put("npub", npub)
+                    ret.put("isFavorite", isFavorite)
+                    notifyListeners("favoriteNotificationReceived", ret)
+                }
             }
         }
     }
@@ -287,6 +296,35 @@ class BluetoothEcashPlugin : Plugin() {
         } catch (e: Exception) {
             Log.e(TAG, "Failed to send token", e)
             call.reject("Failed to send token: ${e.message}")
+        }
+    }
+
+    /**
+     * Send plain text message to a specific peer (for favorite notifications, etc)
+     * 
+     * @param peerID Peer ID to send to
+     * @param message Text message content
+     */
+    @PluginMethod
+    fun sendTextMessage(call: PluginCall) {
+        try {
+            val peerID = call.getString("peerID") ?: run {
+                call.reject("Peer ID is required")
+                return
+            }
+            val message = call.getString("message") ?: run {
+                call.reject("Message is required")
+                return
+            }
+
+            // Send via mesh service
+            bluetoothService?.sendTextMessageToPeer(peerID, message)
+
+            call.resolve()
+            Log.d(TAG, "Sent text message to $peerID: ${message.take(30)}...")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to send text message", e)
+            call.reject("Failed to send text message: ${e.message}")
         }
     }
 

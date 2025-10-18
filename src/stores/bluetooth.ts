@@ -108,7 +108,7 @@ export const useBluetoothStore = defineStore('bluetooth', {
 
           // Set up Web Bluetooth callbacks
           webBluetoothService.initialize(this.nickname);
-          
+
           webBluetoothService.setOnPeerDiscovered((peer) => {
             console.log('Web Bluetooth: Peer discovered', peer);
             this.handlePeerDiscovered({
@@ -171,6 +171,11 @@ export const useBluetoothStore = defineStore('bluetooth', {
           this.handleTokenDelivered(event.messageId, event.peerID);
         });
 
+        await BluetoothEcash.addListener('favoriteNotificationReceived', (event: { peerID: string; npub: string; isFavorite: boolean }) => {
+          console.log('⭐️ Favorite notification received:', event);
+          this.handleFavoriteNotification(event.peerID, event.npub, event.isFavorite);
+        });
+
         this.isInitialized = true;
         console.log('Bluetooth ecash service initialized');
       } catch (e) {
@@ -186,7 +191,7 @@ export const useBluetoothStore = defineStore('bluetooth', {
         // Desktop PWA with Web Bluetooth
         if (this.isDesktop) {
           console.log('🖥️ Desktop PWA detected, using Web Bluetooth...');
-          
+
           if (!this.isWebBluetoothAvailable) {
             console.error('❌ Web Bluetooth not available');
             notifyError('Web Bluetooth not supported. Please use Chrome or Edge browser.');
@@ -196,12 +201,12 @@ export const useBluetoothStore = defineStore('bluetooth', {
           console.log('✅ Web Bluetooth available, starting service...');
           console.log('🔗 Current URL:', window.location.href);
           console.log('🔒 HTTPS enabled:', window.location.protocol === 'https:');
-          
+
           // Web Bluetooth requires user interaction to request device
           // This will show browser's device picker dialog
           console.log('🎯 Requesting Bluetooth device...');
           const peer = await webBluetoothService.requestDevice();
-          
+
           if (!peer) {
             // Don't show error for user cancellation
             console.log('⚠️ User cancelled device selection or no device available');
@@ -296,7 +301,7 @@ export const useBluetoothStore = defineStore('bluetooth', {
      */
     async sendToken(options: SendTokenOptions): Promise<string | null> {
       console.log('🔵 [STORE] sendToken called with:', options);
-      
+
       try {
         // Desktop PWA with Web Bluetooth
         if (this.isDesktop) {
@@ -307,7 +312,7 @@ export const useBluetoothStore = defineStore('bluetooth', {
 
           console.log('🔵 [WEB] Sending token via Web Bluetooth...');
           const success = await webBluetoothService.sendToken(options.token, options.peerID);
-          
+
           if (success) {
             const messageId = Date.now().toString();
             this.pendingMessages.push(messageId);
@@ -323,7 +328,7 @@ export const useBluetoothStore = defineStore('bluetooth', {
         console.log('🔵 [STORE] Calling BluetoothEcash.sendToken...');
         const result = await BluetoothEcash.sendToken(options);
         console.log('🔵 [STORE] Native returned:', result);
-        
+
         const { messageId } = result;
         this.pendingMessages.push(messageId);
         console.log('🔵 [STORE] Success, returning messageId:', messageId);
@@ -332,6 +337,33 @@ export const useBluetoothStore = defineStore('bluetooth', {
         console.error('🔵 [STORE ERROR]:', e);
         notifyError('Failed to send token via Bluetooth');
         return null;
+      }
+    },
+
+    /**
+     * Send plain text message to a specific peer (for favorite notifications, etc)
+     */
+    async sendTextMessage(peerID: string, message: string): Promise<boolean> {
+      try {
+        if (!this.isActive) {
+          console.warn('Bluetooth not active, cannot send text message');
+          return false;
+        }
+
+        if (this.isDesktop) {
+          // Web Bluetooth text messaging not implemented yet
+          console.warn('Web Bluetooth text messaging not supported yet');
+          return false;
+        }
+
+        // Native: Use the plugin's sendTextMessage method if available, or fall back to using mesh service directly
+        // For now, we'll use the native mesh service's sendMessageToPeer
+        await BluetoothEcash.sendTextMessage({ peerID, message });
+        console.log(`📤 Sent text message to ${peerID}: ${message.substring(0, 30)}...`);
+        return true;
+      } catch (e) {
+        console.error('Failed to send text message:', e);
+        return false;
       }
     },
 
@@ -459,6 +491,37 @@ export const useBluetoothStore = defineStore('bluetooth', {
     },
 
     /**
+     * Handle favorite notification received (matches bitchat implementation)
+     */
+    handleFavoriteNotification(peerID: string, npub: string, isFavorite: boolean) {
+      console.log(`⭐️ ${isFavorite ? 'FAVORITED' : 'UNFAVORITED'} by ${peerID} with npub: ${npub.substring(0, 16)}...`);
+      
+      // Update favorites store with the peer's Nostr npub
+      const favoritesStore = useFavoritesStore();
+      favoritesStore.updateNostrNpub(peerID, npub);
+      
+      // If they favorited us, update the theyFavoritedUs flag
+      if (isFavorite) {
+        favoritesStore.updatePeerFavoritedUs(peerID, true);
+      } else {
+        favoritesStore.updatePeerFavoritedUs(peerID, false);
+      }
+      
+      // Show notification to user
+      const peer = this.nearbyPeers.find(p => p.peerID === peerID);
+      const nickname = peer?.nickname || peerID.substring(0, 8);
+      
+      if (isFavorite) {
+        const isMutual = favoritesStore.isMutualFavorite(peerID);
+        if (isMutual) {
+          notifySuccess(`💕 Mutual favorite with ${nickname}! You can now message via Nostr.`);
+        } else {
+          notifySuccess(`⭐️ ${nickname} added you as favorite. Favorite back for Nostr messaging!`);
+        }
+      }
+    },
+
+    /**
      * Poll for available peers periodically
      */
     async startPeerPolling() {
@@ -535,7 +598,7 @@ export const useBluetoothStore = defineStore('bluetooth', {
 
       try {
         const result = await BluetoothEcash.startAlwaysOnMode();
-        
+
         if (result.success) {
           this.alwaysOnActive = true;
           notifySuccess('Always-on mode started. Bluetooth mesh will stay active 24/7.');
@@ -560,7 +623,7 @@ export const useBluetoothStore = defineStore('bluetooth', {
 
       try {
         const result = await BluetoothEcash.stopAlwaysOnMode();
-        
+
         if (result.success) {
           this.alwaysOnActive = false;
           this.alwaysOnEnabled = false;
@@ -618,7 +681,7 @@ export const useBluetoothStore = defineStore('bluetooth', {
 
       try {
         const result = await BluetoothEcash.requestBatteryOptimizationExemption();
-        
+
         if (result.success) {
           notifySuccess('Battery optimization dialog opened. Please allow Bitpoints to run in background.');
           console.log('Battery optimization exemption requested:', result.message);

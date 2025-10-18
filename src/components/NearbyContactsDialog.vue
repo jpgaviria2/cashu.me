@@ -264,7 +264,7 @@ export default defineComponent({
           amount.value = null;
           memo.value = '';
           selectedPeers.value.clear();
-          
+
           // Close dialog after successful send
           emit('close');
         }
@@ -333,7 +333,7 @@ export default defineComponent({
           // Reset form
           amount.value = null;
           memo.value = '';
-          
+
           // Close dialog after successful broadcast
           emit('close');
         }
@@ -364,20 +364,42 @@ export default defineComponent({
     };
 
     const toggleFavorite = async (peer: Peer) => {
-      if (isFavorite(peer.peerID)) {
+      const isCurrentlyFavorite = isFavorite(peer.peerID);
+      
+      if (isCurrentlyFavorite) {
+        // Remove from favorites
         favoritesStore.removeFavorite(peer.peerID);
+        
+        // Send unfavorite notification via Bluetooth
+        if (nostrStore.pubkey) {
+          try {
+            await bluetoothStore.sendTextMessage(peer.peerID, `[UNFAVORITED]:${nostrStore.pubkey}`);
+            console.log(`📤 Sent unfavorite notification to ${peer.nickname}`);
+          } catch (error) {
+            console.error('Failed to send unfavorite notification:', error);
+          }
+        }
+        
         notifySuccess(`Removed ${peer.nickname} from favorites`);
       } else {
-        // Add to favorites with Nostr npub if available
+        // Add to favorites
         favoritesStore.addFavorite(
           peer.peerID,
           peer.nickname || 'Unknown',
           peer.nostrNpub || null
         );
+        
+        // Send favorite notification with our Nostr npub via Bluetooth
+        if (nostrStore.pubkey) {
+          try {
+            await bluetoothStore.sendTextMessage(peer.peerID, `[FAVORITED]:${nostrStore.pubkey}`);
+            console.log(`📤 Sent favorite notification with npub to ${peer.nickname}`);
+          } catch (error) {
+            console.error('Failed to send favorite notification:', error);
+          }
+        }
+        
         notifySuccess(`Added ${peer.nickname} to favorites`);
-
-        // Note: Favorite notification via Bluetooth will be implemented in future version
-        // This would notify the peer that they've been favorited
       }
     };
 
