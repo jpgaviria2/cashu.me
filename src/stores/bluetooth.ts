@@ -4,6 +4,7 @@ import { webBluetoothService, WebBluetoothService } from 'src/plugins/web-blueto
 import { useWalletStore } from './wallet';
 import { useNostrStore } from './nostr';
 import { useReceiveTokensStore } from './receiveTokensStore';
+import { useFavoritesStore } from './favorites';
 import { useLocalStorage } from '@vueuse/core';
 import { notifySuccess, notifyError, notifyWarning } from 'src/js/notify';
 import { Capacitor } from '@capacitor/core';
@@ -565,7 +566,7 @@ export const useBluetoothStore = defineStore('bluetooth', {
 
       // Update favorites store with the peer's Nostr npub
       const favoritesStore = useFavoritesStore();
-      
+
       // Ensure favorite exists before updating npub
       if (!favoritesStore.favorites[peerID]) {
         const peer = this.nearbyPeers.find(p => p.peerID === peerID);
@@ -575,7 +576,7 @@ export const useBluetoothStore = defineStore('bluetooth', {
         console.log(`✅ Updating existing favorite npub for ${peerID}`);
         favoritesStore.updateNostrNpub(peerID, npub);
       }
-      
+
       favoritesStore.updatePeerFavoritedUs(peerID, true);
 
       // Show success notification
