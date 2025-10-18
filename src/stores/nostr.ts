@@ -291,36 +291,47 @@ export const useNostrStore = defineStore("nostr", {
       // Decode npub to hex if necessary
       let recipientPubkeyHex = recipient;
       if (recipient.startsWith('npub1')) {
-        const decoded = nip19.decode(recipient);
-        if (decoded.type === 'npub') {
-          recipientPubkeyHex = decoded.data as string;
-          console.log(`📤 Decoded npub to hex: ${recipientPubkeyHex.substring(0, 16)}...`);
+        try {
+          const decoded = nip19.decode(recipient);
+          if (decoded.type === 'npub') {
+            recipientPubkeyHex = decoded.data as string;
+            console.log(`📤 Decoded npub to hex: ${recipientPubkeyHex.substring(0, 16)}...`);
+          }
+        } catch (e) {
+          console.error('❌ Failed to decode npub:', e);
+          notifyError(`Invalid npub format: ${e}`);
+          return;
         }
       }
+      
+      console.log(`📤 Sending plaintext Cashu token to: ${recipientPubkeyHex.substring(0, 16)}...`);
+      console.log(`📤 Message length: ${message.length} chars`);
 
-      const randomPrivateKey = generateSecretKey();
-      const randomPublicKey = getPublicKey(randomPrivateKey);
-      // const randomPrivateKey = hexToBytes(this.seedSignerPrivateKey);
-      // const randomPublicKey = this.pubkey;
+      // Use wallet seed signer for consistency
+      await this.walletSeedGenerateKeyPair();
+      
       const ndk = new NDK({
         explicitRelayUrls: this.relays,
-        signer: new NDKPrivateKeySigner(bytesToHex(randomPrivateKey)),
+        signer: new NDKPrivateKeySigner(this.seedSignerPrivateKey),
       });
+      
+      await ndk.connect();
+      
       const event = new NDKEvent(ndk);
-      ndk.connect();
-      event.kind = NDKKind.EncryptedDirectMessage;
-      console.log(`📤 Encrypting message for recipient: ${recipientPubkeyHex.substring(0, 16)}...`);
-      event.content = await nip04.encrypt(randomPrivateKey, recipientPubkeyHex, message);
+      event.kind = 4; // DM kind, but sending plaintext (Cashu tokens are bearer tokens)
+      event.content = message; // No encryption - token is already a bearer token
       event.tags = [["p", recipientPubkeyHex]];
-      console.log(`📤 Signing NIP-04 event with random key: ${bytesToHex(randomPublicKey).substring(0, 16)}...`);
-      event.sign();
-      console.log(`📤 Publishing NIP-04 DM to relays:`, this.relays);
+      
+      console.log(`📤 Signing event with our seedSigner: ${this.seedSignerPublicKey.substring(0, 16)}...`);
+      await event.sign();
+      
+      console.log(`📤 Publishing to relays:`, this.relays);
       try {
         await event.publish();
-        console.log(`✅ NIP-04 event published successfully`);
-        notifySuccess("Message sent via Nostr");
+        console.log(`✅ Event published successfully`);
+        notifySuccess("Sent via Nostr");
       } catch (e) {
-        console.error('❌ Failed to publish NIP-04 event:', e);
+        console.error('❌ Failed to publish event:', e);
         notifyError(`Could not publish: ${e}`);
       }
     },
@@ -345,25 +356,16 @@ export const useNostrStore = defineStore("nostr", {
           { closeOnEose: false, groupable: false }
         );
         sub.on("event", (event: NDKEvent) => {
-          console.log("📨 NIP-04 event received from relay");
+          console.log("📨 Nostr DM received from relay (kind 4)");
           console.log("📨 Sender pubkey:", event.pubkey.substring(0, 16) + "...");
           console.log("📨 Recipient (us):", this.seedSignerPublicKey.substring(0, 16) + "...");
-          nip04
-            .decrypt(
-              hexToBytes(this.seedSignerPrivateKey),
-              event.pubkey,
-              event.content
-            )
-            .then((content) => {
-              console.log("✅ NIP-04 DM decrypted successfully");
-              console.log("Content:", content);
-              nip04DirectMessageEvents.add(event);
-              this.lastEventTimestamp = Math.floor(Date.now() / 1000);
-              this.parseMessageForEcash(content);
-            })
-            .catch((error) => {
-              console.error("❌ Failed to decrypt NIP-04 message:", error);
-            });
+          console.log("📨 Content (plaintext Cashu):", event.content.substring(0, 50) + "...");
+          
+          // No decryption needed - Cashu tokens are bearer tokens
+          // We send them as plaintext for simplicity and compatibility
+          nip04DirectMessageEvents.add(event);
+          this.lastEventTimestamp = Math.floor(Date.now() / 1000);
+          this.parseMessageForEcash(event.content);
         });
       });
       try {

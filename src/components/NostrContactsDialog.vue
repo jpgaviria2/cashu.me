@@ -249,6 +249,16 @@ export default defineComponent({
 
         const tokenBase64 = proofsStore.serializeProofs(sendProofs);
 
+        // Add to transaction history FIRST so token is never lost
+        tokensStore.addPendingToken({
+          amount: actualAmount,
+          token: tokenBase64,
+          mint: mintsStore.activeMintUrl,
+          unit: unit.value,
+          label: sendMemo.value ? `📡 Nostr: ${sendMemo.value}` : `📡 Sent to ${sendTarget.value.peerNickname} via Nostr`,
+        });
+        console.log('💾 Token saved to transaction history (can be recovered via QR)');
+
         // Build Nostr direct message content
         let messageContent = tokenBase64;
         if (sendMemo.value) {
@@ -259,15 +269,6 @@ export default defineComponent({
         console.log(`📤 Sending to npub: ${sendTarget.value.peerNostrNpub.substring(0, 20)}...`);
         console.log(`📤 Message length: ${messageContent.length} chars`);
         await nostrStore.sendNip04DirectMessage(sendTarget.value.peerNostrNpub, messageContent);
-
-        // Add to transaction history so user can recover via QR code
-        tokensStore.addPendingToken({
-          amount: actualAmount,
-          token: tokenBase64,
-          mint: mintsStore.activeMintUrl,
-          unit: unit.value,
-          label: sendMemo.value ? `📡 Nostr: ${sendMemo.value}` : `📡 Sent to ${sendTarget.value.peerNickname} via Nostr`,
-        });
 
         notifySuccess(`Sent ${sendAmount.value} ${unit.value} to ${sendTarget.value.peerNickname} via Nostr!`);
         closeSendDialog();
