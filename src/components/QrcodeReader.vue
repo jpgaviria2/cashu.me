@@ -18,21 +18,47 @@ export default {
       urDecoderProgress: 0,
     };
   },
-  mounted() {
-    this.qrScanner = new QrScanner(
-      this.$refs.cameraEl as HTMLVideoElement,
-      (result: QrScanner.ScanResult) => {
-        this.handleResult(result);
-      },
-      {
-        returnDetailedScanResult: true,
-        highlightScanRegion: true,
-        highlightCodeOutline: true,
-        onDecodeError: () => {},
+  async mounted() {
+    try {
+      // Request camera permission first for Android compatibility
+      const hasPermission = await this.requestCameraPermission();
+      if (!hasPermission) {
+        console.error('Camera permission denied');
+        this.$q.notify({
+          type: 'negative',
+          message: 'Camera permission is required to scan QR codes',
+          position: 'top',
+        });
+        return;
       }
-    );
-    this.qrScanner.start();
-    this.urDecoder = new URDecoder();
+
+      this.qrScanner = new QrScanner(
+        this.$refs.cameraEl as HTMLVideoElement,
+        (result: QrScanner.ScanResult) => {
+          this.handleResult(result);
+        },
+        {
+          returnDetailedScanResult: true,
+          highlightScanRegion: true,
+          highlightCodeOutline: true,
+          onDecodeError: (error) => {
+            console.debug('QR decode error:', error);
+          },
+        }
+      );
+      
+      await this.qrScanner.start();
+      this.urDecoder = new URDecoder();
+      console.log('✅ Camera started successfully');
+    } catch (error) {
+      console.error('❌ Failed to start camera:', error);
+      this.$q.notify({
+        type: 'negative',
+        message: `Camera error: ${error}. Please check permissions in Settings.`,
+        position: 'top',
+        timeout: 5000,
+      });
+    }
   },
   computed: {
     ...mapState(useCameraStore, ["camera", "hasCamera"]),
@@ -46,6 +72,21 @@ export default {
   },
   methods: {
     ...mapActions(useCameraStore, ["closeCamera", "showCamera"]),
+    async requestCameraPermission() {
+      try {
+        // Try to get camera permission via getUserMedia
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: 'environment' } 
+        });
+        // Close the stream immediately after getting permission
+        stream.getTracks().forEach(track => track.stop());
+        console.log('✅ Camera permission granted');
+        return true;
+      } catch (error) {
+        console.error('❌ Camera permission denied or error:', error);
+        return false;
+      }
+    },
     handleResult(result: QrScanner.ScanResult) {
       // if this is a multipart-qr code, do not yet emit
       if (result.data.toLowerCase().startsWith("ur:")) {
@@ -72,7 +113,14 @@ export default {
     },
   },
   unmounted() {
-    this.qrScanner?.destroy();
+    try {
+      if (this.qrScanner) {
+        this.qrScanner.stop();
+        this.qrScanner.destroy();
+      }
+    } catch (error) {
+      console.warn('Error cleaning up camera:', error);
+    }
   },
 };
 </script>
