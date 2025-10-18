@@ -177,7 +177,10 @@ export const useBluetoothStore = defineStore('bluetooth', {
         });
 
         await BluetoothEcash.addListener('favoriteRequestReceived', (event: { peerID: string; nickname: string; npub: string }) => {
-          console.log('📬 Favorite request received:', event);
+          console.log('📬 [LISTENER] Favorite request received:', event);
+          console.log('📬 [LISTENER] peerID:', event.peerID);
+          console.log('📬 [LISTENER] nickname:', event.nickname);
+          console.log('📬 [LISTENER] npub:', event.npub?.substring(0, 16));
           this.handleFavoriteRequest(event.peerID, event.nickname, event.npub);
         });
 
@@ -532,13 +535,17 @@ export const useBluetoothStore = defineStore('bluetooth', {
     },
 
     handleFavoriteRequest(peerID: string, nickname: string, npub: string) {
+      console.log('📬 [HANDLER] handleFavoriteRequest called');
       console.log(`📬 Favorite request from ${nickname} (${peerID}) with npub: ${npub.substring(0, 16)}...`);
 
       // Add to pending requests
       const favoritesStore = useFavoritesStore();
+      console.log('📬 [HANDLER] Adding pending request to store...');
       favoritesStore.addPendingRequest(peerID, nickname, npub);
+      console.log('📬 [HANDLER] Pending request added. Count:', favoritesStore.pendingCount);
 
       // Show notification with action
+      console.log('📬 [HANDLER] Showing notification...');
       notifySuccess(`📬 ${nickname} wants to be your favorite!`, {
         timeout: 5000,
         actions: [
@@ -546,8 +553,7 @@ export const useBluetoothStore = defineStore('bluetooth', {
             label: 'View',
             color: 'white',
             handler: () => {
-              // This will be handled by opening the pending requests dialog
-              // The UI will detect pending requests and show a badge
+              console.log('📬 [NOTIFICATION] View action clicked');
             }
           }
         ]
@@ -559,7 +565,17 @@ export const useBluetoothStore = defineStore('bluetooth', {
 
       // Update favorites store with the peer's Nostr npub
       const favoritesStore = useFavoritesStore();
-      favoritesStore.updateNostrNpub(peerID, npub);
+      
+      // Ensure favorite exists before updating npub
+      if (!favoritesStore.favorites[peerID]) {
+        const peer = this.nearbyPeers.find(p => p.peerID === peerID);
+        console.log(`✅ Creating favorite for ${peerID} before updating npub`);
+        favoritesStore.addFavorite(peerID, peer?.nickname || 'Unknown', npub);
+      } else {
+        console.log(`✅ Updating existing favorite npub for ${peerID}`);
+        favoritesStore.updateNostrNpub(peerID, npub);
+      }
+      
       favoritesStore.updatePeerFavoritedUs(peerID, true);
 
       // Show success notification

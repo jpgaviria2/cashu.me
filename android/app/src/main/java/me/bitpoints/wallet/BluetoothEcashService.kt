@@ -59,9 +59,10 @@ class BluetoothEcashService(private val context: Context) {
                 Log.d(TAG, "Received TEXT message: ${content.take(50)}...")
 
                 // Handle favorite notifications (matches bitchat implementation)
-                if (content.startsWith("[FAVORITE_REQUEST]:") ||
-                    content.startsWith("[FAVORITE_ACCEPTED]:") ||
+                if (content.startsWith("[FAVORITE_REQUEST]:") || 
+                    content.startsWith("[FAVORITE_ACCEPTED]:") || 
                     content.startsWith("[UNFAVORITED]:")) {
+                    Log.i(TAG, "🔔 FAVORITE NOTIFICATION DETECTED: ${content.substring(0, 30)}...")
                     handleFavoriteNotification(content, message.senderPeerID ?: "unknown", message.sender)
                     return  // Don't process as regular message
                 }
@@ -424,16 +425,19 @@ class BluetoothEcashService(private val context: Context) {
 
             when {
                 content.startsWith("[FAVORITE_REQUEST]:") -> {
-                    Log.i(TAG, "📬 Received FAVORITE_REQUEST from $fromPeerID (${nickname ?: "Unknown"}) with npub: ${npub.take(16)}...")
+                    Log.i(TAG, "📬 Processing FAVORITE_REQUEST from $fromPeerID (${nickname ?: "Unknown"}) with npub: ${npub.take(16)}...")
                     delegate?.onFavoriteRequestReceived(fromPeerID, nickname ?: "Unknown", npub)
+                    Log.i(TAG, "📬 Delegate notified for FAVORITE_REQUEST")
                 }
                 content.startsWith("[FAVORITE_ACCEPTED]:") -> {
-                    Log.i(TAG, "✅ Received FAVORITE_ACCEPTED from $fromPeerID with npub: ${npub.take(16)}...")
+                    Log.i(TAG, "✅ Processing FAVORITE_ACCEPTED from $fromPeerID with npub: ${npub.take(16)}...")
                     delegate?.onFavoriteAcceptedReceived(fromPeerID, npub)
+                    Log.i(TAG, "✅ Delegate notified for FAVORITE_ACCEPTED")
                 }
                 content.startsWith("[UNFAVORITED]:") -> {
-                    Log.i(TAG, "💔 Received UNFAVORITE notification from $fromPeerID with npub: ${npub.take(16)}...")
+                    Log.i(TAG, "💔 Processing UNFAVORITE notification from $fromPeerID with npub: ${npub.take(16)}...")
                     delegate?.onFavoriteNotificationReceived(fromPeerID, npub, false)
+                    Log.i(TAG, "💔 Delegate notified for UNFAVORITE")
                 }
             }
 

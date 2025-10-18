@@ -88,7 +88,6 @@
           dense
           :suffix="unit"
           class="q-mb-md"
-          autofocus
           placeholder="Enter amount"
         >
           <template v-slot:prepend>

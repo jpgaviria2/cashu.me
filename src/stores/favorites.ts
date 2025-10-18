@@ -222,7 +222,8 @@ export const useFavoritesStore = defineStore('favorites', {
       peerNickname: string,
       peerNostrNpub: string
     ) {
-      console.log(`📬 Adding pending request from: ${peerNickname} (${peerNoisePublicKey.substring(0, 16)}...)`);
+      console.log(`📬 [STORE] Adding pending request: ${peerNickname} (${peerNoisePublicKey.substring(0, 16)}...)`);
+      console.log(`📬 [STORE] npub: ${peerNostrNpub.substring(0, 16)}...`);
 
       const request: FavoritePendingRequest = {
         peerNoisePublicKey,
@@ -232,6 +233,8 @@ export const useFavoritesStore = defineStore('favorites', {
       };
 
       this.pendingRequests[peerNoisePublicKey] = request;
+      console.log(`📬 [STORE] Pending request saved. Total count:`, Object.keys(this.pendingRequests).length);
+      console.log(`📬 [STORE] Pending requests:`, this.pendingRequests);
     },
 
     /**

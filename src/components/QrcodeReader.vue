@@ -136,11 +136,15 @@ export default {
           const decoded = ur.decodeCBOR();
           this.$emit("decode", decoded.toString());
           this.qrScanner?.stop();
+          // Blur any focused input to prevent keyboard
+          (document.activeElement as HTMLElement)?.blur();
           this.urDecoderProgress = 0;
         }
       } else {
         this.$emit("decode", result.data);
         this.qrScanner?.stop();
+        // Blur any focused input to prevent keyboard
+        (document.activeElement as HTMLElement)?.blur();
       }
     },
     pasteToParseDialog: async function () {
@@ -263,9 +267,9 @@ export default {
         <q-icon name="camera_alt" class="q-mr-sm" />
         Grant Camera Permission
       </q-btn>
-      <q-btn @click="closeCamera" flat color="grey" class="q-ml-auto">{{
-        $t("QrcodeReader.actions.close.label")
-      }}</q-btn>
+      <q-btn flat round icon="close" color="grey" @click="closeCamera" class="q-ml-auto">
+        <q-tooltip>Close</q-tooltip>
+      </q-btn>
     </div>
   </q-card>
 </template>

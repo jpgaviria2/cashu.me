@@ -100,12 +100,14 @@ class BluetoothEcashPlugin : Plugin() {
                 }
 
                 override fun onFavoriteRequestReceived(fromPeerID: String, nickname: String, npub: String) {
-                    Log.d(TAG, "Favorite request received: peerID=$fromPeerID, nickname=$nickname, npub=${npub.take(16)}...")
+                    Log.i(TAG, "📬 [PLUGIN] Favorite request received: peerID=$fromPeerID, nickname=$nickname, npub=${npub.take(16)}...")
                     val ret = JSObject()
                     ret.put("peerID", fromPeerID)
                     ret.put("nickname", nickname)
                     ret.put("npub", npub)
+                    Log.i(TAG, "📬 [PLUGIN] Notifying listeners for favoriteRequestReceived")
                     notifyListeners("favoriteRequestReceived", ret)
+                    Log.i(TAG, "📬 [PLUGIN] Listeners notified successfully")
                 }
 
                 override fun onFavoriteAcceptedReceived(fromPeerID: String, npub: String) {
