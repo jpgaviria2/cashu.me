@@ -343,12 +343,12 @@ export const useNostrStore = defineStore("nostr", {
         // Subscribe from 24 hours ago to catch recent messages
         const oneDayAgo = Math.floor(Date.now() / 1000) - (24 * 60 * 60);
         const subscribeFrom = this.lastEventTimestamp || oneDayAgo;
-        
+
         console.log(
           `### Subscribing to NIP-04 direct messages to ${this.seedSignerPublicKey} since ${subscribeFrom}`
         );
         console.log(`🔔 Will receive messages from the last 24 hours`);
-        
+
         this.ndk.connect();
         const sub = this.ndk.subscribe(
           {
@@ -579,6 +579,7 @@ export const useNostrStore = defineStore("nostr", {
 
       console.log("🔍 Parsing message for Cashu tokens");
       const receiveStore = useReceiveTokensStore();
+      const tokensStore = useTokensStore();
       const words = message.split(" ");
       const tokens = words.filter((word) => {
         return word.startsWith("cashuA") || word.startsWith("cashuB");
@@ -587,10 +588,38 @@ export const useNostrStore = defineStore("nostr", {
 
       for (const tokenStr of tokens) {
         console.log(`💰 Processing Cashu token: ${tokenStr.substring(0, 30)}...`);
+
+        // Check if already in history AND claimed (amount < 0 means claimed)
+        const tokenInHistory = tokensStore.tokenAlreadyInHistory(tokenStr);
+        if (tokenInHistory) {
+          if (tokenInHistory.amount < 0) {
+            console.log("ℹ️ Token already claimed, skipping");
+            continue;
+          } else {
+            console.log("ℹ️ Token in history but not claimed yet, will auto-claim");
+          }
+        } else {
+          // Add to history first if not already there
+          await this.addPendingTokenToHistory(tokenStr, false);
+        }
+
+        // Auto-claim for Nostr messages (we have internet connection)
+        console.log('💎 Auto-claiming Cashu token from Nostr...');
         receiveStore.receiveData.tokensBase64 = tokenStr;
-        receiveStore.showReceiveTokens = true;
-        await this.addPendingTokenToHistory(tokenStr);
-        console.log('✅ Token added to history and receive dialog shown');
+
+        try {
+          const success = await receiveStore.receiveIfDecodes();
+          if (success) {
+            console.log('✅ Token claimed successfully!');
+            notifySuccess('💰 Received ecash via Nostr!');
+          } else {
+            console.warn('⚠️ Auto-claim failed, showing receive dialog');
+            receiveStore.showReceiveTokens = true;
+          }
+        } catch (error) {
+          console.error('❌ Auto-claim error:', error);
+          receiveStore.showReceiveTokens = true;
+        }
       }
     },
     addPendingTokenToHistory: function (tokenStr: string, verbose = true) {

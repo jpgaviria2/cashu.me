@@ -597,6 +597,42 @@ export default {
     getMint: function (decoded_token) {
       return token.getMint(decoded_token);
     },
+    autoClaimPendingNostrTokens: async function () {
+      console.log('🔍 Checking for pending Nostr tokens to auto-claim...');
+      const tokensStore = useTokensStore();
+      const receiveStore = useReceiveTokensStore();
+
+      // Check if history is initialized
+      if (!tokensStore.history || !Array.isArray(tokensStore.history)) {
+        console.log('ℹ️ Tokens history not yet initialized, skipping auto-claim');
+        return;
+      }
+
+      // Find all pending tokens (amount > 0 means not claimed yet)
+      const pendingTokens = tokensStore.history.filter(
+        (t) => t.amount > 0 && t.token && t.token.length > 0
+      );
+
+      console.log(`Found ${pendingTokens.length} pending token(s) in history`);
+
+      for (const pendingToken of pendingTokens) {
+        try {
+          console.log(`💎 Auto-claiming pending token: ${pendingToken.amount} ${pendingToken.unit}`);
+          receiveStore.receiveData.tokensBase64 = pendingToken.token;
+          const success = await receiveStore.receiveIfDecodes();
+          if (success) {
+            console.log(`✅ Auto-claimed ${pendingToken.amount} ${pendingToken.unit}`);
+            notifySuccess(`💰 Auto-claimed ${pendingToken.amount} ${pendingToken.unit} from Nostr!`);
+          }
+        } catch (error) {
+          console.warn(`⚠️ Failed to auto-claim token:`, error);
+        }
+      }
+
+      if (pendingTokens.length > 0) {
+        console.log('✅ Finished auto-claiming pending tokens');
+      }
+    },
     //
     shortenString: function (s) {
       return shortenString(s, 20, 10);
@@ -989,6 +1025,9 @@ export default {
     // Subscribe to NIP-04 DMs for Nostr contacts feature
     console.log('🔔 Subscribing to NIP-04 DMs for contacts...');
     this.subscribeToNip04DirectMessages();
+
+    // Auto-claim any pending Nostr tokens from history
+    this.autoClaimPendingNostrTokens();
 
     // start invoice checker worker
     this.startInvoiceCheckerWorker();
