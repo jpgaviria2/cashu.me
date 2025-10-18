@@ -256,6 +256,8 @@ export default defineComponent({
         }
 
         // Send via Nostr DM (NIP-04)
+        console.log(`📤 Sending to npub: ${sendTarget.value.peerNostrNpub.substring(0, 20)}...`);
+        console.log(`📤 Message length: ${messageContent.length} chars`);
         await nostrStore.sendNip04DirectMessage(sendTarget.value.peerNostrNpub, messageContent);
 
         // Add to transaction history so user can recover via QR code

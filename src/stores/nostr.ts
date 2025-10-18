@@ -309,15 +309,19 @@ export const useNostrStore = defineStore("nostr", {
       const event = new NDKEvent(ndk);
       ndk.connect();
       event.kind = NDKKind.EncryptedDirectMessage;
+      console.log(`📤 Encrypting message for recipient: ${recipientPubkeyHex.substring(0, 16)}...`);
       event.content = await nip04.encrypt(randomPrivateKey, recipientPubkeyHex, message);
       event.tags = [["p", recipientPubkeyHex]];
+      console.log(`📤 Signing NIP-04 event with random key: ${bytesToHex(randomPublicKey).substring(0, 16)}...`);
       event.sign();
+      console.log(`📤 Publishing NIP-04 DM to relays:`, this.relays);
       try {
         await event.publish();
-        notifySuccess("NIP-04 event published");
+        console.log(`✅ NIP-04 event published successfully`);
+        notifySuccess("Message sent via Nostr");
       } catch (e) {
-        console.error(e);
-        notifyError("Could not publish NIP-04 event");
+        console.error('❌ Failed to publish NIP-04 event:', e);
+        notifyError(`Could not publish: ${e}`);
       }
     },
     subscribeToNip04DirectMessages: async function () {
@@ -341,7 +345,9 @@ export const useNostrStore = defineStore("nostr", {
           { closeOnEose: false, groupable: false }
         );
         sub.on("event", (event: NDKEvent) => {
-          console.log("event");
+          console.log("📨 NIP-04 event received from relay");
+          console.log("📨 Sender pubkey:", event.pubkey.substring(0, 16) + "...");
+          console.log("📨 Recipient (us):", this.seedSignerPublicKey.substring(0, 16) + "...");
           nip04
             .decrypt(
               hexToBytes(this.seedSignerPrivateKey),
@@ -349,11 +355,14 @@ export const useNostrStore = defineStore("nostr", {
               event.content
             )
             .then((content) => {
-              console.log("NIP-04 DM from", event.pubkey);
+              console.log("✅ NIP-04 DM decrypted successfully");
               console.log("Content:", content);
               nip04DirectMessageEvents.add(event);
               this.lastEventTimestamp = Math.floor(Date.now() / 1000);
               this.parseMessageForEcash(content);
+            })
+            .catch((error) => {
+              console.error("❌ Failed to decrypt NIP-04 message:", error);
             });
         });
       });
