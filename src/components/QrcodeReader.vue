@@ -11,11 +11,13 @@ export default {
     qrScanner: QrScanner | null;
     urDecoder: URDecoder | null;
     urDecoderProgress: number;
+    cameraWorking: boolean;
   } {
     return {
       qrScanner: null,
       urDecoder: null,
       urDecoderProgress: 0,
+      cameraWorking: false,
     };
   },
   async mounted() {
@@ -46,9 +48,10 @@ export default {
           },
         }
       );
-      
+
       await this.qrScanner.start();
       this.urDecoder = new URDecoder();
+      this.cameraWorking = true;
       console.log('✅ Camera started successfully');
     } catch (error) {
       console.error('❌ Failed to start camera:', error);
@@ -74,17 +77,52 @@ export default {
     ...mapActions(useCameraStore, ["closeCamera", "showCamera"]),
     async requestCameraPermission() {
       try {
-        // Try to get camera permission via getUserMedia
+        // First try the web API approach (works on most platforms)
+        console.log('📷 Requesting camera permission via getUserMedia...');
         const stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { facingMode: 'environment' } 
+          video: { 
+            facingMode: 'environment',
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          } 
         });
+        
         // Close the stream immediately after getting permission
         stream.getTracks().forEach(track => track.stop());
-        console.log('✅ Camera permission granted');
+        console.log('✅ Camera permission granted via getUserMedia');
         return true;
-      } catch (error) {
-        console.error('❌ Camera permission denied or error:', error);
-        return false;
+        
+      } catch (webError) {
+        console.warn('❌ getUserMedia failed, trying Capacitor Camera plugin...', webError);
+        
+        try {
+          // Fallback to Capacitor Camera plugin
+          const { Camera } = await import('@capacitor/camera');
+          
+          // Check current permissions
+          const permissions = await Camera.checkPermissions();
+          console.log('📷 Current camera permissions:', permissions);
+          
+          if (permissions.camera === 'granted') {
+            console.log('✅ Camera permission already granted via Capacitor');
+            return true;
+          }
+          
+          // Request camera permission
+          const requestResult = await Camera.requestPermissions();
+          console.log('📷 Camera permission request result:', requestResult);
+          
+          if (requestResult.camera === 'granted') {
+            console.log('✅ Camera permission granted via Capacitor');
+            return true;
+          } else {
+            console.error('❌ Camera permission denied via Capacitor:', requestResult);
+            return false;
+          }
+        } catch (capacitorError) {
+          console.error('❌ Capacitor Camera plugin also failed:', capacitorError);
+          return false;
+        }
       }
     },
     handleResult(result: QrScanner.ScanResult) {
@@ -109,6 +147,49 @@ export default {
       const text = await useUiStore().pasteFromClipboard();
       if (text) {
         this.$emit("decode", text);
+      }
+    },
+    async retryCameraPermission() {
+      console.log('🔄 Retrying camera permission...');
+      const hasPermission = await this.requestCameraPermission();
+      if (hasPermission) {
+        try {
+          this.qrScanner = new QrScanner(
+            this.$refs.cameraEl as HTMLVideoElement,
+            (result: QrScanner.ScanResult) => {
+              this.handleResult(result);
+            },
+            {
+              returnDetailedScanResult: true,
+              highlightScanRegion: true,
+              highlightCodeOutline: true,
+              onDecodeError: (error) => {
+                console.debug('QR decode error:', error);
+              },
+            }
+          );
+          
+          await this.qrScanner.start();
+          this.cameraWorking = true;
+          this.$q.notify({
+            type: 'positive',
+            message: 'Camera started successfully!',
+            position: 'top',
+          });
+        } catch (error) {
+          console.error('❌ Failed to start camera after permission:', error);
+          this.$q.notify({
+            type: 'negative',
+            message: `Camera error: ${error}`,
+            position: 'top',
+          });
+        }
+      } else {
+        this.$q.notify({
+          type: 'negative',
+          message: 'Camera permission denied. Please enable in Settings.',
+          position: 'top',
+        });
       }
     },
   },
@@ -173,6 +254,15 @@ export default {
         <q-icon name="content_paste" class="q-mr-sm" />
         {{ $t("QrcodeReader.actions.paste.label") }}</q-btn
       >
+      <q-btn 
+        v-if="!cameraWorking"
+        @click="retryCameraPermission"
+        color="primary"
+        class="q-ml-sm"
+      >
+        <q-icon name="camera_alt" class="q-mr-sm" />
+        Grant Camera Permission
+      </q-btn>
       <q-btn @click="closeCamera" flat color="grey" class="q-ml-auto">{{
         $t("QrcodeReader.actions.close.label")
       }}</q-btn>
